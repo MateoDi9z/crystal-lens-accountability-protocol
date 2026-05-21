@@ -2,7 +2,10 @@
 pragma solidity 0.8.30;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-
+// Por ahora no puedo eliminar organizaciones o contribuidores
+// es algo que queremos implementar? Deberiamos.
+// Para asociar a los Contribuidores con las org podria hacer una struct que
+// tenga una lista de ids
 contract Governance is Ownable {
     enum ProposalStatus {
         Active,
@@ -26,8 +29,23 @@ contract Governance is Ownable {
 
     uint256 public proposalCount;
 
+    // lo unico que guardo es bool, para saber si esta registrado
+    // pero podriamos guardar algo mas, porque al final es como 
+    // tener una lista donde despues chequeo si esta (actualmente hace eso).
     mapping(address => bool) public organizations;
+    // podria hacer que sea una address[] donde digo si esta asociado a una org
+    // pero la cosa es que, podemos tener contribuidores que no esten asociados
+    // a ninguna org?
+    // mapping(address => address[]) public contributors;
+
+    // este enfoque limita a que el contribuidor solo pueda estar asociado a una
+    // org, lo cual nos facilitaria las cosas, aunque no soluciona la dependencia
+    // que se crea si la org es removida.
+    // mapping(address => address) public contributors;
     mapping(address => bool) public contributors;
+
+    // una mejor idea seria hacer un mapa donde yo pueda ver de donde es member
+    // mapping(address => mapping(address => bool)) public isMemberOf;
 
     mapping(uint256 => Proposal) public proposals;
 
@@ -54,6 +72,7 @@ contract Governance is Ownable {
     }
 
     modifier onlyContributor() {
+        // si no esta asociado a ninguna org no es un contribuidor
         require(contributors[msg.sender], "Not contributor");
         _;
     }
