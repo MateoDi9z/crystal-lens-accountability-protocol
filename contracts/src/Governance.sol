@@ -27,12 +27,31 @@ contract Governance is Ownable {
         ProposalStatus status;
     }
 
+    struct Organization{
+        bool isRegistered;
+        uint256 hasManyMembers;
+        mapping(address => bool) hasMember;
+    }
+
+    struct Contributor{
+        bool isRegistered;
+        uint256 isMemberOfMany;
+        mapping(address => bool) isMemberOf;
+    }
+
     uint256 public proposalCount;
 
     // lo unico que guardo es bool, para saber si esta registrado
     // pero podriamos guardar algo mas, porque al final es como 
     // tener una lista donde despues chequeo si esta (actualmente hace eso).
-    mapping(address => bool) public organizations;
+
+    // si tiene mas de cero integrantes es una org, o directamente si existe
+    // ya lo consideramos como valida
+    mapping(address => Organization) public organizations;
+    mapping(address => Contributor) public contributors;
+
+    // org => contributor => isMember
+    // mapping(address => mapping(address => bool)) public orgMembers;
     // podria hacer que sea una address[] donde digo si esta asociado a una org
     // pero la cosa es que, podemos tener contribuidores que no esten asociados
     // a ninguna org?
@@ -42,7 +61,6 @@ contract Governance is Ownable {
     // org, lo cual nos facilitaria las cosas, aunque no soluciona la dependencia
     // que se crea si la org es removida.
     // mapping(address => address) public contributors;
-    mapping(address => bool) public contributors;
 
     // una mejor idea seria hacer un mapa donde yo pueda ver de donde es member
     // mapping(address => mapping(address => bool)) public isMemberOf;
@@ -55,6 +73,7 @@ contract Governance is Ownable {
     // Events
     event OrganizationAdded(address indexed organization);
     event ContributorAdded(address indexed contributor);
+    event ContributorAddedToOrganiaztion(address indexed contributor, address indexed organization);
 
     event ProposalCreated(uint256 indexed proposalId, address indexed proposer);
 
@@ -67,13 +86,26 @@ contract Governance is Ownable {
     event ProposalFinalized(uint256 indexed proposalId, ProposalStatus status);
 
     modifier onlyOrganization() {
-        require(organizations[msg.sender], "Not organization");
+        // si no tiene contribuidores, tiene sentido en este sistema que
+        // que sea una org? porque al fin y al cabo la idea es que tenga
+        // contribuidores
+        require(organizations[msg.sender].isRegistered, "Not organization");
+        // podria chequear si la org tiene contribuidores
+        // de no tener no es una org valida
         _;
     }
 
     modifier onlyContributor() {
-        // si no esta asociado a ninguna org no es un contribuidor
-        require(contributors[msg.sender], "Not contributor");
+        // claro si me preguntan solo por el contribuidor deberia
+        // llevar una cuenta de si esa address esta en alguna org
+        // porque no puedo loopear en las orgs para saber si esta
+        // en alguna org
+
+        // si chequeo eso jamas voy a poder agregar un contribuidor
+        // porque el valor inicial siempre es cero entonces y la idea
+        // seria chequear si esta en el mapping
+
+        require(contributors[msg.sender].isRegistered, "Not contributor");
         _;
     }
 
@@ -82,15 +114,59 @@ contract Governance is Ownable {
     }
 
     function addOrganization(address organization) external onlyOwner {
-        organizations[organization] = true;
+        organizations[organization].isRegistered = true;
 
         emit OrganizationAdded(organization);
     }
 
     function addContributor(address contributor) external onlyOwner {
-        contributors[contributor] = true;
+        contributors[contributor].isRegistered = true;
 
         emit ContributorAdded(contributor);
+    }
+
+    function addContToOrg(address org, address cont) private {
+        organizations[org].hasMember[cont] = true;
+        organizations[org].hasManyMembers++;
+    }
+
+    function addOrgToCont(address cont, address org) private {
+        contributors[cont].isMemberOf[org] = true;
+        contributors[cont].isMemberOfMany++;
+    }
+
+    function registerOrgIfNotExist(address org) private { 
+        if (organizations[org].isRegistered) return;
+
+        organizations[org].isRegistered = true;
+    }
+
+    function registerContIfNotExist(address cont) private { 
+        if (contributors[cont].isRegistered) return;
+
+        contributors[cont].isRegistered = true;
+    }
+
+    function isContInOrg(address cont, address org) private view returns(bool) {
+        return organizations[org].hasMember[cont];
+    }
+
+    function addContributorIntoOrg(address contributor, address org) external onlyOwner {
+        require(!isContInOrg(contributor, org), "Already a member");
+
+        registerOrgIfNotExist(org);
+        registerContIfNotExist(contributor);
+
+        addContToOrg(org, contributor);
+        addOrgToCont(contributor, org);
+
+        // la verdad que no me copa no poder saber directamente 
+        // el size de una arreglo, pero bueno es la unica forma
+        // i think
+        // isMemberOfMany[contributor]++;
+        // isOrgHasMany[org]++;
+
+        emit ContributorAddedToOrganiaztion(contributor, org);
     }
 
     function createProposal(
