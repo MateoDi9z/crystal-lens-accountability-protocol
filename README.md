@@ -46,42 +46,9 @@ Tecnologías:
 - OpenZeppelin
 - Sepolia Testnet
 
-Contratos principales:
+## Contratos principales:
 
-## `Treasury.sol`
-
-Contrato encargado de:
-
-- Custodiar los fondos.
-- Recibir aportes.
-- Mantener el balance del protocolo.
-- Liberar fondos aprobados.
-
-### Responsabilidades
-
-- Recepción de fondos.
-- Bloqueo de capital hasta aprobación.
-- Ejecución de pagos autorizados.
-
----
-
-## `Governance.sol`
-
-Contrato encargado de:
-
-- Crear propuestas.
-- Gestionar votaciones.
-- Verificar ejecución.
-- Coordinar liberación de fondos.
-
-### Responsabilidades
-
-- Registro de organismos autorizados.
-- Registro de contribuyentes.
-- Gestión del ciclo de vida de propuestas.
-- Sistema de doble confirmación (*Proof of Execution*).
-
----
+Si more in [SMART_CONTRACTS](./SMART_CONTRACTS.md)
 
 # 👥 Modelo de Roles
 
@@ -124,84 +91,6 @@ El contrato puede:
   - monto total aportado
   - cantidad de aportes
   - estado de elegibilidad para votar
-
----
-
-# 🗳️ Sistema de Gobernanza
-
-## Flujo General
-
-### 1. Registro
-
-Usuarios ingresan mediante:
-
-- Wallet tradicional
-- Abstract Login (ReOwn)
-
----
-
-### 2. Aportes
-
-Los contribuyentes depositan fondos en el Treasury.
-
-Opciones posibles:
-
-- ETH Sepolia
-- ERC20 mock de presupuesto
-
----
-
-### 3. Creación de propuesta
-
-Un organismo crea una propuesta indicando:
-
-- título
-- descripción
-- monto solicitado
-- destinatario
-- duración de votación
-
----
-
-### 4. Votación
-
-Los contribuyentes pueden:
-
-- votar a favor
-- votar en contra
-
-Regla base:
-
-```txt
-1 wallet = 1 voto
-```
-
----
-
-### 5. Aprobación
-
-Si la propuesta alcanza quorum y mayoría:
-
-- queda marcada como `APPROVED`
-- pero los fondos aún NO se liberan
-
----
-
-### 6. Proof of Execution
-
-Luego de ejecutar el trabajo/proyecto:
-
-Los contribuyentes realizan una segunda votación para confirmar:
-
-```txt
-¿La propuesta realmente fue ejecutada?
-```
-
-Si la comunidad confirma:
-
-- el Treasury libera los fondos
-
----
 
 # 🔐 Seguridad y Decisiones Técnicas
 
@@ -365,6 +254,7 @@ contracts/
 ├── src/
 │   ├── Treasury.sol
 │   ├── Governance.sol
+
 │   └── interfaces/
 ├── script/
 ├── test/
