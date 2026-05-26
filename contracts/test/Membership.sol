@@ -13,10 +13,7 @@ contract MembershipTest is Test {
     address bob = address(2);
 
     function setUp() public {
-        membership = new Membership(
-            "CLAP Membership 1",
-            "CLAP-001"
-        );
+        membership = new Membership("CLAP Membership 1", "CLAP-001");
     }
 
     // =========================
@@ -24,25 +21,13 @@ contract MembershipTest is Test {
     // =========================
 
     function testDeployment() public view {
-        assertEq(
-            membership.name(),
-            "CLAP Membership 1"
-        );
+        assertEq(membership.name(), "CLAP Membership 1");
 
-        assertEq(
-            membership.symbol(),
-            "CLAP-001"
-        );
+        assertEq(membership.symbol(), "CLAP-001");
 
-        assertEq(
-            membership.decimals(),
-            0
-        );
+        assertEq(membership.decimals(), 0);
 
-        assertEq(
-            membership.owner(),
-            owner
-        );
+        assertEq(membership.owner(), owner);
     }
 
     // =========================
@@ -52,10 +37,7 @@ contract MembershipTest is Test {
     function testMintMember() public {
         membership.mint(alice);
 
-        assertEq(
-            membership.balanceOf(alice),
-            1
-        );
+        assertEq(membership.balanceOf(alice), 1);
     }
 
     function testCannotMintTwice() public {
@@ -83,10 +65,7 @@ contract MembershipTest is Test {
 
         membership.burn(alice);
 
-        assertEq(
-            membership.balanceOf(alice),
-            0
-        );
+        assertEq(membership.balanceOf(alice), 0);
     }
 
     function testNonOwnerCannotBurn() public {
@@ -120,11 +99,7 @@ contract MembershipTest is Test {
 
         vm.expectRevert("Transfers disabled");
 
-        membership.transferFrom(
-            alice,
-            bob,
-            1
-        );
+        membership.transferFrom(alice, bob, 1);
     }
 
     function testCannotApprove() public {
@@ -142,32 +117,20 @@ contract MembershipTest is Test {
     // =========================
 
     function testIsMemberThroughBalance() public {
-        assertEq(
-            membership.balanceOf(alice),
-            0
-        );
+        assertEq(membership.balanceOf(alice), 0);
 
         membership.mint(alice);
 
-        assertEq(
-            membership.balanceOf(alice),
-            1
-        );
+        assertEq(membership.balanceOf(alice), 1);
     }
 
     function testBurnRemovesMembership() public {
         membership.mint(alice);
 
-        assertEq(
-            membership.balanceOf(alice),
-            1
-        );
+        assertEq(membership.balanceOf(alice), 1);
 
         membership.burn(alice);
 
-        assertEq(
-            membership.balanceOf(alice),
-            0
-        );
+        assertEq(membership.balanceOf(alice), 0);
     }
 }
