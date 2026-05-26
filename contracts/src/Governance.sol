@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GNU Affero General Public License v3.0
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
 // Governance.sol
