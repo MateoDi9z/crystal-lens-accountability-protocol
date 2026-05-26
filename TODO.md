@@ -1,4 +1,4 @@
-# ¿ Contexto General del Proyecto
+# Contexto General del Proyecto
 
 CLAP (Crystal Lens Accountability Protocol) es una plataforma de gobernanza descentralizada para organismos públicos y comunidades.
 
@@ -22,21 +22,21 @@ Cada contrato tendrá una responsabilidad clara y desacoplada.
 
 ---
 
-# ¿ Modelo Conceptual
+# Modelo Conceptual
 
 El sistema modela:
 
 ```
 Organizations
-    ¿ many-to-many
+     many-to-many
 Contributors
 
 Organizations
-    ¿ one-to-many
+     one-to-many
 Proposals
 
 Proposals
-    ¿ many-to-many
+     many-to-many
 Votes
 ```
 
@@ -44,7 +44,7 @@ Además:
 
 ```
 Organizations
-    ¿ one-to-many
+     one-to-many
 Contribution Requests / Debts
 ```
 
@@ -57,7 +57,7 @@ Un contributor puede:
 
 ---
 
-# ¿¿ Arquitectura General
+# Arquitectura General
 
 # 1. Memberships.sol
 
@@ -183,7 +183,7 @@ Este contrato:
 
 ---
 
-# ¿ Relaciones Entre Contratos
+# Relaciones Entre Contratos
 
 ```
 Governance
@@ -200,7 +200,7 @@ Memberships será el contrato central de permisos.
 
 ---
 
-# ¿¿ Decisiones Importantes
+#  Decisiones Importantes
 
 ## No usar arrays para relaciones many-to-many
 
@@ -221,7 +221,7 @@ ERC1155 resuelve esto elegantemente.
 
 ---
 
-# ¿ CONTRACT 1 ¿ Memberships.sol
+#  CONTRACT 1  Memberships.sol
 
 # Objetivo
 
@@ -229,7 +229,7 @@ Representar organizaciones y membresías.
 
 ---
 
-# Paso 1 ¿ Crear contrato ERC1155
+# Paso 1  Crear contrato ERC1155
 
 Herencia:
 
@@ -240,7 +240,7 @@ Ownable
 
 ---
 
-# Paso 2 ¿ Crear contador de organizaciones
+# Paso 2  Crear contador de organizaciones
 
 Variable:
 
@@ -250,7 +250,7 @@ uint256 public organizationCount;
 
 ---
 
-# Paso 3 ¿ Crear metadata de organizaciones
+# Paso 3  Crear metadata de organizaciones
 
 Struct:
 
@@ -270,7 +270,7 @@ mapping(uint256 => Organization) public organizations;
 
 ---
 
-# Paso 4 ¿ Crear organización
+# Paso 4  Crear organización
 
 Función:
 
@@ -287,7 +287,7 @@ Debe:
 
 ---
 
-# Paso 5 ¿ Implementar memberships ERC1155
+# Paso 5  Implementar memberships ERC1155
 
 Las memberships serán Soulbound.
 
@@ -297,7 +297,7 @@ Implementar override de:
 
 para bloquear transferencias entre usuarios.
 
-# Paso 5.5 ¿ Bloquear transferencias
+# Paso 5.5  Bloquear transferencias
 
 Overridear:
 
@@ -312,7 +312,7 @@ Cualquier transferencia wallet -> wallet debe revertir.
 
 ---
 
-# Paso 6 ¿ Agregar miembros
+# Paso 6  Agregar miembros
 
 Función:
 
@@ -327,7 +327,7 @@ Validaciones:
 
 ---
 
-# Paso 7 ¿ Remover miembros
+# Paso 7  Remover miembros
 
 Función:
 
@@ -357,7 +357,7 @@ organizationAdmins[orgId][msg.sender] = true;
 
 El creador queda como primer admin.
 
-# Paso 8 ¿ Helpers
+# Paso 8  Helpers
 
 Funciones:
 
@@ -368,7 +368,7 @@ isAdmin(orgId, user)
 
 ---
 
-# Paso 9 ¿ Eventos
+# Paso 9  Eventos
 
 Crear:
 
@@ -380,7 +380,7 @@ MemberRemoved
 
 ---
 
-# Paso 10 ¿ Tests
+# Paso 10  Tests
 
 Testear:
 
@@ -396,7 +396,7 @@ Testear:
 
 ---
 
-# ¿¿ CONTRACT 2 ¿ Governance.sol
+#  CONTRACT 2  Governance.sol
 
 # Objetivo
 
@@ -404,7 +404,7 @@ Gestionar propuestas y votaciones.
 
 ---
 
-# Paso 1 ¿ Recibir address de Memberships
+# Paso 1  Recibir address de Memberships
 
 Constructor:
 
@@ -420,7 +420,7 @@ Memberships public memberships;
 
 ---
 
-# Paso 2 ¿ Crear enum ProposalStatus
+# Paso 2  Crear enum ProposalStatus
 
 ```solidity
 enum ProposalStatus {
@@ -434,7 +434,7 @@ enum ProposalStatus {
 
 ---
 
-# Paso 3 ¿ Crear struct Proposal
+# Paso 3  Crear struct Proposal
 
 Campos:
 
@@ -457,7 +457,7 @@ status
 
 ---
 
-# Paso 4 ¿ Crear storage
+# Paso 4  Crear storage
 
 ```solidity
 mapping(uint256 => Proposal) public proposals;
@@ -471,7 +471,7 @@ uint256 public proposalCount;
 
 ---
 
-# Paso 5 ¿ Crear proposal
+# Paso 5  Crear proposal
 
 Función:
 
@@ -492,7 +492,7 @@ Debe:
 
 ---
 
-# Paso 6 ¿ Registrar votos
+# Paso 6  Registrar votos
 
 Mapping:
 
@@ -516,7 +516,7 @@ Validaciones:
 
 ---
 
-# Paso 7 ¿ Finalizar proposal
+# Paso 7  Finalizar proposal
 
 Función:
 
@@ -540,7 +540,7 @@ NO liberar fondos todavía.
 
 ---
 
-# Paso 8 ¿ Proof of Execution
+# Paso 8  Proof of Execution
 
 Agregar:
 
@@ -558,12 +558,12 @@ voteExecution(...)
 Segunda votación:
 
 ```
-¿la propuesta realmente se ejecutó?
+la propuesta realmente se ejecutó?
 ```
 
 ---
 
-# Paso 9 ¿ Finalizar ejecución
+# Paso 9  Finalizar ejecución
 
 Función:
 
@@ -581,7 +581,7 @@ y llamar Treasury.
 
 ---
 
-# Paso 10 ¿ Integrar Treasury
+# Paso 10  Integrar Treasury
 
 Guardar:
 
@@ -597,7 +597,7 @@ treasury.releaseFunds(...)
 
 ---
 
-# Paso 11 ¿ Eventos
+# Paso 11  Eventos
 
 Crear:
 
@@ -612,7 +612,7 @@ ProposalExecuted
 
 ---
 
-# Paso 12 ¿ Tests
+# Paso 12  Tests
 
 Testear:
 
@@ -627,7 +627,7 @@ Testear:
 
 ---
 
-# ¿ CONTRACT 3 ¿ Treasury.sol
+#  CONTRACT 3  Treasury.sol
 
 # Objetivo
 
@@ -635,7 +635,7 @@ Gestionar dinero y contribution requests.
 
 ---
 
-# Paso 1 ¿ Recibir Memberships
+# Paso 1  Recibir Memberships
 
 Constructor:
 
@@ -645,7 +645,7 @@ constructor(address membershipsAddress)
 
 ---
 
-# Paso 2 ¿ Crear balances por organización
+# Paso 2  Crear balances por organización
 
 ```solidity
 mapping(uint256 => uint256)
@@ -654,7 +654,7 @@ public organizationBalances;
 
 ---
 
-# Paso 3 ¿ Contribution Requests / Debts
+# Paso 3  Contribution Requests / Debts
 
 Mapping:
 
@@ -671,7 +671,7 @@ orgId -> contributor -> debt
 
 ---
 
-# Paso 4 ¿ Registrar pagos totales
+# Paso 4  Registrar pagos totales
 
 ```solidity
 mapping(uint256 => mapping(address => uint256))
@@ -680,7 +680,7 @@ public totalPaid;
 
 ---
 
-# Paso 5 ¿ Asignar deuda
+# Paso 5  Asignar deuda
 
 Función:
 
@@ -701,7 +701,7 @@ pendingDebt += amount;
 
 ---
 
-# Paso 6 ¿ Pagar deuda
+# Paso 6  Pagar deuda
 
 Función:
 
@@ -718,7 +718,7 @@ Debe:
 
 ---
 
-# Paso 7 ¿ Depositar fondos libres
+# Paso 7  Depositar fondos libres
 
 Función:
 
@@ -730,7 +730,7 @@ Para donaciones o aportes sin deuda.
 
 ---
 
-# Paso 8 ¿ Liberar fondos
+# Paso 8  Liberar fondos
 
 Función:
 
@@ -748,7 +748,7 @@ Debe:
 
 ---
 
-# Paso 9 ¿ Seguridad
+# Paso 9  Seguridad
 
 Agregar:
 
@@ -764,7 +764,7 @@ nonReentrant
 
 ---
 
-# Paso 10 ¿ Eventos
+# Paso 10  Eventos
 
 Crear:
 
@@ -777,7 +777,7 @@ FundsReleased
 
 ---
 
-# Paso 11 ¿ Tests
+# Paso 11  Tests
 
 Testear:
 
@@ -791,7 +791,7 @@ Testear:
 
 ---
 
-# ¿ Orden Recomendado de Desarrollo
+#  Orden Recomendado de Desarrollo
 
 # Fase 1
 
@@ -849,7 +849,7 @@ Frontend.
 
 ---
 
-# ¿ Recomendaciones Importantes
+#  Recomendaciones Importantes
 
 # 1. Mantener contratos pequeños
 
@@ -895,7 +895,7 @@ Después optimizan.
 
 ---
 
-# ¿ Resultado Final Esperado
+#  Resultado Final Esperado
 
 Una DAO multi-organización donde:
 
