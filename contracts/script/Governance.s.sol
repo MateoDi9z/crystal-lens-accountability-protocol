@@ -2,7 +2,6 @@
 import {Script} from "forge-std/Script.sol";
 import {Governance} from "../src/Governance.sol";
 
-
 contract GovernanceScript is Script {
     Governance public governance;
 

@@ -8,6 +8,4 @@ pragma solidity 0.8.30;
 // ├── payments
 // └── releases
 
-contract Treasury {
-    
-}
+contract Treasury {}
