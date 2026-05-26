@@ -5,3 +5,7 @@ pragma solidity 0.8.30;
 // ├── proposals
 // ├── voting
 // └── proof of execution
+
+contract Governance {
+    
+}

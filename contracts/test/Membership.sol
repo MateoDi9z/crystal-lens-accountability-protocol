@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GNU Affero General Public License v3.0
 pragma solidity 0.8.30;
 
-import "forge-std/Test.sol";
-import "../src/Membership.sol";
+import {Test} from "forge-std/Test.sol";
+import {Membership} from "../src/Membership.sol";
 
 contract MembershipTest is Test {
     Membership membership;
@@ -89,7 +89,8 @@ contract MembershipTest is Test {
 
         vm.expectRevert("Transfers disabled");
 
-        membership.transfer(bob, 1);
+        bool res = membership.transfer(bob, 1);
+        assertEq(res, false);
     }
 
     function testCannotTransferFrom() public {
@@ -99,7 +100,8 @@ contract MembershipTest is Test {
 
         vm.expectRevert("Transfers disabled");
 
-        membership.transferFrom(alice, bob, 1);
+        bool res = membership.transferFrom(alice, bob, 1);
+        assertEq(res, false);
     }
 
     function testCannotApprove() public {

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GNU Affero General Public License v3.0
 import {Script} from "forge-std/Script.sol";
+import {Governance} from "../src/Governance.sol";
 
-contract CounterScript is Script {
+
+contract GovernanceScript is Script {
     Governance public governance;
 
     function setUp() public {}
@@ -9,8 +11,7 @@ contract CounterScript is Script {
     function run() public {
         vm.startBroadcast();
 
-        owner = address(0);
-        governance = new Governance("0xCLAP");
+        governance = new Governance();
 
         vm.stopBroadcast();
     }

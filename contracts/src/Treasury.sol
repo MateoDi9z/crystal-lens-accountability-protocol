@@ -7,3 +7,7 @@ pragma solidity 0.8.30;
 // ├── pendingDebt
 // ├── payments
 // └── releases
+
+contract Treasury {
+    
+}
