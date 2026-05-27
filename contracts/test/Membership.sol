@@ -13,7 +13,7 @@ contract MembershipTest is Test {
     address bob = address(2);
 
     function setUp() public {
-        membership = new Membership("CLAP Membership 1", "CLAP-001");
+        membership = new Membership("CLAP Membership 1", "CLAP-001", owner);
     }
 
     // =========================

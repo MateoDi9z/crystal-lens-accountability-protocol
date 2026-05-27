@@ -10,4 +10,5 @@ pragma solidity 0.8.30;
 
 contract Treasury {
     // TODO: Treasury
-}
+
+    }
