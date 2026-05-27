@@ -188,7 +188,7 @@ contract TreasuryTest is Test {
 
     function testReceiveFallback() public {
         // Direct transfer to contract address
-        (bool success, ) = address(treasury).call{value: 4 ether}("");
+        (bool success,) = address(treasury).call{value: 4 ether}("");
         assertTrue(success);
 
         assertEq(treasury.totalFunds(), 4 ether);
@@ -254,7 +254,7 @@ contract TreasuryTest is Test {
     function testReentrancyGuardOnRelease() public {
         // Deploy attacker contract
         ReentrantAttacker attacker = new ReentrantAttacker(address(treasury));
-        
+
         // Deposit 5 ETH to Treasury
         treasury.deposit{value: 5 ether}();
 

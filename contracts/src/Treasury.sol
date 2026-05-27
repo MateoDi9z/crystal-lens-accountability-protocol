@@ -75,7 +75,7 @@ contract Treasury is Ownable, ReentrancyGuard {
 
         totalFunds -= amount;
 
-        (bool success, ) = recipient.call{value: amount}("");
+        (bool success,) = recipient.call{value: amount}("");
         require(success, "ETH transfer failed");
 
         emit FundsReleased(recipient, amount);
