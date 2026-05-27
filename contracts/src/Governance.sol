@@ -6,4 +6,6 @@ pragma solidity 0.8.30;
 // ├── voting
 // └── proof of execution
 
-contract Governance {}
+contract Governance {
+    // TODO: Governance
+}
