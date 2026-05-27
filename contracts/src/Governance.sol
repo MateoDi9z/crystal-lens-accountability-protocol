@@ -8,5 +8,4 @@ pragma solidity 0.8.30;
 
 contract Governance {
     // TODO: Governance
-
-    }
+}
