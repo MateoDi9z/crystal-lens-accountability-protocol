@@ -19,6 +19,7 @@ contract Treasury is Ownable, ReentrancyGuard {
 
     mapping(address => uint256) public pendingContribution;
     mapping(address => uint256) public totalPaid;
+    uint256 contributorCount;
 
     event GovernanceUpdated(address indexed previousGovernance, address indexed newGovernance);
     event ContributionRequested(address indexed contributor, uint256 amount);
@@ -53,6 +54,7 @@ contract Treasury is Ownable, ReentrancyGuard {
         require(membership.isMember(contributor), "Not an active member");
         require(amount > 0, "Amount must be greater than 0");
 
+        contributorCount += 1;
         pendingContribution[contributor] += amount;
         emit ContributionRequested(contributor, amount);
     }
@@ -76,6 +78,9 @@ contract Treasury is Ownable, ReentrancyGuard {
         emit FundsDeposited(msg.sender, msg.value);
     }
 
+    function getContributorCount() public view return(uint256) {
+      return contributorCount;
+    }
     function isContributor(address contributor) public view return(bool) {
         return membership.isContributor(contributor);
     }
