@@ -109,12 +109,11 @@ contract Treasury is Ownable, ReentrancyGuard {
     }
 
     receive() external payable {
-        if (msg.value > 0) {
-            if (pendingContribution[msg.sender] == 0 && totalPaid[msg.sender] == 0) {
-                contributorCount += 1;
-            }
-            totalPaid[msg.sender] += msg.value;
+        if (pendingContribution[msg.sender] == 0 && totalPaid[msg.sender] == 0) {
+            contributorCount += 1;
         }
+
+        totalPaid[msg.sender] += msg.value;
         totalFunds += msg.value;
         emit FundsDeposited(msg.sender, msg.value);
     }
