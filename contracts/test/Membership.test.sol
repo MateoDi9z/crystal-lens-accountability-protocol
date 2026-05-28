@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GNU Affero General Public License v3.0
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
@@ -13,7 +13,7 @@ contract MembershipTest is Test {
     address bob = address(2);
 
     function setUp() public {
-        membership = new Membership("CLAP Membership 1", "CLAP-001");
+        membership = new Membership("CLAP Membership 1", "CLAP-001", owner);
     }
 
     // =========================
