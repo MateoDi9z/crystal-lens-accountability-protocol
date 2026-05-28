@@ -24,8 +24,9 @@ contract Treasury is Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(address membershipAddress) Ownable(msg.sender) {
+    constructor(address membershipAddress, address _owner) Ownable(_owner) {
         require(membershipAddress != address(0), "Invalid membership address");
+        require(_owner != address(0), "Invalid owner address");
         membership = Membership(membershipAddress);
     }
 
