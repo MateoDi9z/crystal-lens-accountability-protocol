@@ -31,6 +31,11 @@ contract Treasury is Ownable, ReentrancyGuard {
         _;
     }
 
+    modifier onlyMember() {
+        require(membership.isMember(msg.address), "Only members can call")
+        _;
+    }
+
     constructor(address membershipAddress, address _owner) Ownable(_owner) {
         require(membershipAddress != address(0), "Invalid membership address");
         require(_owner != address(0), "Invalid owner address");
@@ -52,28 +57,32 @@ contract Treasury is Ownable, ReentrancyGuard {
         emit ContributionRequested(contributor, amount);
     }
 
-    function payContribution() external payable {
-        uint256 pending = pendingContribution[msg.sender];
-        require(pending > 0, "No pending contribution request");
+    function payContribution() external payable onlyMember {
         require(msg.value > 0, "Amount must be greater than 0");
 
-        uint256 paidAmount = msg.value;
-        if (paidAmount >= pending) {
-            pendingContribution[msg.sender] = 0;
-        } else {
-            pendingContribution[msg.sender] -= paidAmount;
-        }
+        uint256 pending = pendingContribution[msg.sender];
+        require(pending > 0, "No pending contribution request");
 
-        totalPaid[msg.sender] += paidAmount;
+        totalPaid[msg.sender] += msg.value;
         totalFunds += paidAmount;
 
         emit ContributionPaid(msg.sender, paidAmount);
     }
-
+    
     function deposit() external payable {
         require(msg.value > 0, "Amount must be greater than 0");
+        totalPaid[msg.sender] += msg.value;
         totalFunds += msg.value;
         emit FundsDeposited(msg.sender, msg.value);
+    }
+
+    function isContributor(address contributor) public view return(bool) {
+        return membership.isContributor(contributor);
+    }
+
+    function isContributorWithoutPendingContributions(address contributor) public view return(bool) {
+        require(membership.isContributor(contributor), "Not a contributor registered");
+        return totalPaid[contributor] - pendingContribution[contributor] >= 0;
     }
 
     function releaseFunds(address payable recipient, uint256 amount) external onlyGovernance nonReentrant {
