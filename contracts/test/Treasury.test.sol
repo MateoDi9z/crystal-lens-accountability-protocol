@@ -39,7 +39,7 @@ contract TreasuryTest is Test {
 
     function setUp() public {
         // 1. Deploy soulbound Membership token
-        membership = new Membership("CLAP Org", "CLAP");
+        membership = new Membership("CLAP Membership 1", "CLAP-001", owner);
 
         // 2. Deploy Treasury passing Membership address
         treasury = new Treasury(address(membership));
