@@ -3,17 +3,35 @@ pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {Membership} from "../src/Membership.sol";
+import {Treasury} from "../src/Treasury.sol";
+
+contract TreasuryMock is Treasury {
+    bool public isContributorWithoutPendingContributionResult;
+
+    constructor(address membershipAddress, address _owner) Treasury(membershipAddress, _owner) {
+        isContributorWithoutPendingContributionResult = true;
+    }
+
+    function isContributorWithoutPendingContribution(address) public view returns (bool) {
+        return isContributorWithoutPendingContributionResult;
+    }
+}
+
 
 contract MembershipTest is Test {
     Membership membership;
+    TreasuryMock treasury;
 
     address owner = address(this);
+    address admin = address(5);
 
     address alice = address(1);
     address bob = address(2);
 
     function setUp() public {
+        treasury = new TreasuryMock(admin, owner);
         membership = new Membership("CLAP Membership 1", "CLAP-001", owner);
+        membership.setTreasury(address(treasury));
     }
 
     // =========================
@@ -62,20 +80,18 @@ contract MembershipTest is Test {
 
     function testBurnMember() public {
         membership.mint(alice);
+        vm.prank(alice);
 
-        membership.burn(alice);
-
+        membership.burn();
         assertEq(membership.balanceOf(alice), 0);
     }
 
-    function testNonOwnerCannotBurn() public {
+    function testNonOwnerBurn() public {
         membership.mint(alice);
 
         vm.prank(alice);
 
-        vm.expectRevert();
-
-        membership.burn(alice);
+        membership.burn();
     }
 
     // =========================
@@ -131,7 +147,8 @@ contract MembershipTest is Test {
 
         assertEq(membership.balanceOf(alice), 1);
 
-        membership.burn(alice);
+        vm.prank(alice);
+        membership.burn();
 
         assertEq(membership.balanceOf(alice), 0);
     }

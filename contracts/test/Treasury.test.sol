@@ -43,6 +43,7 @@ contract TreasuryTest is Test {
 
         // 2. Deploy Treasury passing Membership address and owner
         treasury = new Treasury(address(membership), owner);
+        membership.setTreasury(address(treasury));
 
         // 3. Configure authorized Governance address
         treasury.setGovernance(governance);

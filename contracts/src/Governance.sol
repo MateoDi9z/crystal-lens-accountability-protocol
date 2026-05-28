@@ -3,6 +3,11 @@ pragma solidity 0.8.30;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+// Governance.sol
+// ├── proposals
+// ├── voting
+// └── proof of execution
+
 interface ITreasury {
     function isContributor(address user) external view returns (bool);
 

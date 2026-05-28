@@ -8,12 +8,16 @@ pragma solidity 0.8.30;
 // ├── payments
 // └── releases
 
-import {Membership} from "./Membership.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+interface IMembership {
+    function isMember(address user) external view returns (bool);
+}
+
 contract Treasury is Ownable, ReentrancyGuard {
-    Membership public immutable membership;
+    IMembership public immutable membership;
+    
     address public governance;
     uint256 public totalFunds;
 
@@ -40,7 +44,7 @@ contract Treasury is Ownable, ReentrancyGuard {
     constructor(address membershipAddress, address _owner) Ownable(_owner) {
         require(membershipAddress != address(0), "Invalid membership address");
         require(_owner != address(0), "Invalid owner address");
-        membership = Membership(membershipAddress);
+        membership = IMembership(membershipAddress);
     }
 
     function setGovernance(address _governance) external onlyOwner {
