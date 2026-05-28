@@ -71,8 +71,14 @@ contract GovernanceTest is Test {
     function testOwnerCanCreateProposal() public {
         governance.createProposal("Build new hospital");
 
-        (uint256 id, address proposer, string memory description, uint256 votesFor, uint256 votesAgainst, Governance.ProposalState state) =
-             governance.proposals(proposalId);
+        (
+            uint256 id,
+            address proposer,
+            string memory description,
+            uint256 votesFor,
+            uint256 votesAgainst,
+            Governance.ProposalState state
+        ) = governance.proposals(proposalId);
 
         assertEq(id, 0);
 
