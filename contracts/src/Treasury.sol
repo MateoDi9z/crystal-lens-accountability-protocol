@@ -61,11 +61,11 @@ contract Treasury is Ownable, ReentrancyGuard {
         emit ContributionRequested(contributor, amount);
     }
 
-    function payContribution() external payable onlyMember {
+    function payAllPendingContribution() external payable onlyMember {
         require(msg.value > 0, "Amount must be greater than 0");
 
         uint256 pending = pendingContribution[msg.sender];
-        require(pending > 0, "No pending contribution request");
+        require(pending == msg.value, "The amount is not the same as pending contribution");
 
         totalPaid[msg.sender] += msg.value;
         totalFunds += msg.value;
@@ -73,18 +73,12 @@ contract Treasury is Ownable, ReentrancyGuard {
         emit ContributionPaid(msg.sender, msg.value);
     }
 
-    function deposit() external payable {
-        require(msg.value > 0, "Amount must be greater than 0");
-        if (pendingContribution[msg.sender] == 0 && totalPaid[msg.sender] == 0) {
-            contributorCount += 1;
-        }
-        totalPaid[msg.sender] += msg.value;
-        totalFunds += msg.value;
-        emit FundsDeposited(msg.sender, msg.value);
-    }
-
     function getContributorCount() public view returns (uint256) {
         return contributorCount;
+    }
+
+    function getPendingContribution(address contributor) public view returns (uint256) {
+        return pendingContribution[contributor];
     }
 
     function isContributor(address contributor) public view returns (bool) {
@@ -109,10 +103,6 @@ contract Treasury is Ownable, ReentrancyGuard {
     }
 
     receive() external payable {
-        if (pendingContribution[msg.sender] == 0 && totalPaid[msg.sender] == 0) {
-            contributorCount += 1;
-        }
-
         totalPaid[msg.sender] += msg.value;
         totalFunds += msg.value;
         emit FundsDeposited(msg.sender, msg.value);

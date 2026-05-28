@@ -112,7 +112,8 @@ contract TreasuryTest is Test {
         assertTrue(treasury.isContributor(alice));
 
         vm.prank(stranger);
-        treasury.deposit{value: 1 ether}();
+        (bool success,) = address(treasury).call{value: 1 ether}("");
+        assertTrue(success);
         assertTrue(treasury.isContributor(stranger));
     }
 
@@ -123,7 +124,7 @@ contract TreasuryTest is Test {
         assertFalse(treasury.isContributorWithoutPendingContributions(alice));
 
         vm.prank(alice);
-        treasury.payContribution{value: 1 ether}();
+        treasury.payAllPendingContribution{value: 1 ether}();
 
         // No more pending contributions (totalPaid: 1, pending: 1)
         assertTrue(treasury.isContributorWithoutPendingContributions(alice));
@@ -131,7 +132,8 @@ contract TreasuryTest is Test {
 
     function testIsContributorWithoutPendingContributionsAfterDeposit() public {
         vm.prank(stranger);
-        treasury.deposit{value: 1 ether}();
+        (bool success,) = address(treasury).call{value: 1 ether}("");
+        assertTrue(success);
         // totalPaid: 1, pending: 0
         assertTrue(treasury.isContributorWithoutPendingContributions(stranger));
     }
@@ -174,11 +176,11 @@ contract TreasuryTest is Test {
     // PAYING CONTRIBUTIONS
     // ==========================================
 
-    function testPayContributionExact() public {
+    function testPayAllPendingContributionExact() public {
         treasury.requestContribution(alice, 2 ether);
 
         vm.prank(alice);
-        treasury.payContribution{value: 2 ether}();
+        treasury.payAllPendingContribution{value: 2 ether}();
 
         // In cumulative model, pendingContribution stays as the total requested
         assertEq(treasury.pendingContribution(alice), 2 ether);
@@ -187,33 +189,18 @@ contract TreasuryTest is Test {
         assertEq(address(treasury).balance, 2 ether);
     }
 
-    function testPayContributionPartial() public {
+    function testCannotPayContributionWithWrongAmount() public {
         treasury.requestContribution(alice, 2 ether);
 
         vm.prank(alice);
-        treasury.payContribution{value: 0.8 ether}();
-
-        assertEq(treasury.pendingContribution(alice), 2 ether);
-        assertEq(treasury.totalPaid(alice), 0.8 ether);
-        assertEq(treasury.totalFunds(), 0.8 ether);
-    }
-
-    function testPayContributionOverpayment() public {
-        treasury.requestContribution(alice, 2 ether);
-
-        vm.prank(alice);
-        treasury.payContribution{value: 3 ether}(); // Overpays by 1 ETH
-
-        assertEq(treasury.pendingContribution(alice), 2 ether);
-        assertEq(treasury.totalPaid(alice), 3 ether);
-        assertEq(treasury.totalFunds(), 3 ether);
-        assertEq(address(treasury).balance, 3 ether);
+        vm.expectRevert("The amount is not the same as pending contribution");
+        treasury.payAllPendingContribution{value: 0.8 ether}();
     }
 
     function testCannotPayContributionWithoutRequest() public {
         vm.prank(alice);
-        vm.expectRevert("No pending contribution request");
-        treasury.payContribution{value: 1 ether}();
+        vm.expectRevert("The amount is not the same as pending contribution");
+        treasury.payAllPendingContribution{value: 1 ether}();
     }
 
     function testCannotPayContributionWithZeroValue() public {
@@ -221,25 +208,12 @@ contract TreasuryTest is Test {
 
         vm.prank(alice);
         vm.expectRevert("Amount must be greater than 0");
-        treasury.payContribution{value: 0}();
+        treasury.payAllPendingContribution{value: 0}();
     }
 
     // ==========================================
     // FREE DEPOSITS & RECEIVE FALLBACK
     // ==========================================
-
-    function testDirectDeposit() public {
-        vm.prank(stranger);
-        treasury.deposit{value: 5 ether}();
-
-        assertEq(treasury.totalFunds(), 5 ether);
-        assertEq(address(treasury).balance, 5 ether);
-    }
-
-    function testCannotDepositZero() public {
-        vm.expectRevert("Amount must be greater than 0");
-        treasury.deposit{value: 0}();
-    }
 
     function testReceiveFallback() public {
         assertEq(treasury.getContributorCount(), 0);
@@ -250,8 +224,9 @@ contract TreasuryTest is Test {
 
         assertEq(treasury.totalFunds(), 4 ether);
         assertEq(address(treasury).balance, 4 ether);
-        assertEq(treasury.getContributorCount(), 1);
-        assertTrue(treasury.isContributor(address(this)));
+        // Note: contributorCount won't increment in the current receive() logic
+        // because the user removed the incrementing logic from it.
+        // If it's expected to increment, we need to add it back to receive().
     }
 
     // ==========================================
@@ -259,8 +234,9 @@ contract TreasuryTest is Test {
     // ==========================================
 
     function testReleaseFunds() public {
-        // 1. Put some money in the treasury
-        treasury.deposit{value: 10 ether}();
+        // 1. Put some money in the treasury via receive
+        (bool success,) = address(treasury).call{value: 10 ether}("");
+        assertTrue(success);
         assertEq(treasury.totalFunds(), 10 ether);
 
         uint256 recipientBalanceBefore = alice.balance;
@@ -275,7 +251,8 @@ contract TreasuryTest is Test {
     }
 
     function testCannotReleaseFundsByNonGovernance() public {
-        treasury.deposit{value: 10 ether}();
+        (bool success,) = address(treasury).call{value: 10 ether}("");
+        assertTrue(success);
 
         vm.prank(stranger);
         vm.expectRevert("Only governance can call");
@@ -283,7 +260,8 @@ contract TreasuryTest is Test {
     }
 
     function testCannotReleaseFundsToZeroAddress() public {
-        treasury.deposit{value: 10 ether}();
+        (bool success,) = address(treasury).call{value: 10 ether}("");
+        assertTrue(success);
 
         vm.prank(governance);
         vm.expectRevert("Invalid recipient");
@@ -291,7 +269,8 @@ contract TreasuryTest is Test {
     }
 
     function testCannotReleaseZeroFunds() public {
-        treasury.deposit{value: 10 ether}();
+        (bool success,) = address(treasury).call{value: 10 ether}("");
+        assertTrue(success);
 
         vm.prank(governance);
         vm.expectRevert("Amount must be greater than 0");
@@ -299,7 +278,8 @@ contract TreasuryTest is Test {
     }
 
     function testCannotReleaseFundsInsufficientBalance() public {
-        treasury.deposit{value: 5 ether}();
+        (bool success,) = address(treasury).call{value: 5 ether}("");
+        assertTrue(success);
 
         vm.prank(governance);
         vm.expectRevert("Insufficient active funds in treasury");
@@ -314,8 +294,9 @@ contract TreasuryTest is Test {
         // Deploy attacker contract
         ReentrantAttacker attacker = new ReentrantAttacker(address(treasury));
 
-        // Deposit 5 ETH to Treasury
-        treasury.deposit{value: 5 ether}();
+        // Deposit 5 ETH to Treasury via receive
+        (bool success,) = address(treasury).call{value: 5 ether}("");
+        assertTrue(success);
 
         // Authorize this test contract as governance to call releaseFunds
         treasury.setGovernance(address(this));
