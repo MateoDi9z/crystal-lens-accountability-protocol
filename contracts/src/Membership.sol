@@ -11,7 +11,12 @@ contract Membership is ERC20, Ownable {
     event MemberAdded(address indexed member);
     event MemberRemoved(address indexed member);
 
-    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) Ownable(msg.sender) {}
+    constructor(string memory name_, string memory symbol_, address initialOwner)
+        ERC20(name_, symbol_)
+        Ownable(initialOwner)
+    {
+        require(initialOwner != address(0), "Invalid owner");
+    }
 
     // =========================
     // GETTERS

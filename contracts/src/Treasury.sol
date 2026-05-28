@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
+// Treasury.sol
+// ├── fondos
+// ├── balances
+// ├── pendingDebt
+// ├── payments
+// └── releases
+
 import {Membership} from "./Membership.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
