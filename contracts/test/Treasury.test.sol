@@ -41,8 +41,8 @@ contract TreasuryTest is Test {
         // 1. Deploy soulbound Membership token
         membership = new Membership("CLAP Membership 1", "CLAP-001", owner);
 
-        // 2. Deploy Treasury passing Membership address
-        treasury = new Treasury(address(membership));
+        // 2. Deploy Treasury passing Membership address and owner
+        treasury = new Treasury(address(membership), owner);
 
         // 3. Configure authorized Governance address
         treasury.setGovernance(governance);
@@ -85,6 +85,59 @@ contract TreasuryTest is Test {
     function testCannotSetGovernanceToZero() public {
         vm.expectRevert("Invalid governance address");
         treasury.setGovernance(address(0));
+    }
+
+    // ==========================================
+    // GETTERS & VIEW FUNCTIONS
+    // ==========================================
+
+    function testGetContributorCount() public {
+        assertEq(treasury.getContributorCount(), 0);
+
+        treasury.requestContribution(alice, 1 ether);
+        assertEq(treasury.getContributorCount(), 1);
+
+        // Same contributor shouldn't increment count again
+        treasury.requestContribution(alice, 1 ether);
+        assertEq(treasury.getContributorCount(), 1);
+
+        treasury.requestContribution(bob, 1 ether);
+        assertEq(treasury.getContributorCount(), 2);
+    }
+
+    function testIsContributor() public {
+        assertFalse(treasury.isContributor(alice));
+
+        treasury.requestContribution(alice, 1 ether);
+        assertTrue(treasury.isContributor(alice));
+
+        vm.prank(stranger);
+        treasury.deposit{value: 1 ether}();
+        assertTrue(treasury.isContributor(stranger));
+    }
+
+    function testIsContributorWithoutPendingContributions() public {
+        treasury.requestContribution(alice, 1 ether);
+        
+        // Has pending contribution
+        assertFalse(treasury.isContributorWithoutPendingContributions(alice));
+
+        vm.prank(alice);
+        treasury.payContribution{value: 1 ether}();
+        
+        // No more pending contributions
+        assertTrue(treasury.isContributorWithoutPendingContributions(alice));
+    }
+
+    function testIsContributorWithoutPendingContributionsAfterDeposit() public {
+        vm.prank(stranger);
+        treasury.deposit{value: 1 ether}();
+        assertTrue(treasury.isContributorWithoutPendingContributions(stranger));
+    }
+
+    function testIsContributorWithoutPendingContributionsRevertsForNonContributor() public {
+        vm.expectRevert("Not a contributor registered");
+        treasury.isContributorWithoutPendingContributions(stranger);
     }
 
     // ==========================================

@@ -33,7 +33,7 @@ contract Treasury is Ownable, ReentrancyGuard {
     }
 
     modifier onlyMember() {
-        require(membership.isMember(msg.address), "Only members can call")
+        require(membership.isMember(msg.sender), "Only members can call");
         _;
     }
 
@@ -54,7 +54,9 @@ contract Treasury is Ownable, ReentrancyGuard {
         require(membership.isMember(contributor), "Not an active member");
         require(amount > 0, "Amount must be greater than 0");
 
-        contributorCount += 1;
+        if (pendingContribution[contributor] == 0 && totalPaid[contributor] == 0) {
+            contributorCount += 1;
+        }
         pendingContribution[contributor] += amount;
         emit ContributionRequested(contributor, amount);
     }
@@ -65,29 +67,39 @@ contract Treasury is Ownable, ReentrancyGuard {
         uint256 pending = pendingContribution[msg.sender];
         require(pending > 0, "No pending contribution request");
 
-        totalPaid[msg.sender] += msg.value;
-        totalFunds += paidAmount;
+        if (msg.value >= pending) {
+            pendingContribution[msg.sender] = 0;
+        } else {
+            pendingContribution[msg.sender] -= msg.value;
+        }
 
-        emit ContributionPaid(msg.sender, paidAmount);
+        totalPaid[msg.sender] += msg.value;
+        totalFunds += msg.value;
+
+        emit ContributionPaid(msg.sender, msg.value);
     }
     
     function deposit() external payable {
         require(msg.value > 0, "Amount must be greater than 0");
+        if (pendingContribution[msg.sender] == 0 && totalPaid[msg.sender] == 0) {
+            contributorCount += 1;
+        }
         totalPaid[msg.sender] += msg.value;
         totalFunds += msg.value;
         emit FundsDeposited(msg.sender, msg.value);
     }
 
-    function getContributorCount() public view return(uint256) {
+    function getContributorCount() public view returns (uint256) {
       return contributorCount;
     }
-    function isContributor(address contributor) public view return(bool) {
-        return membership.isContributor(contributor);
+
+    function isContributor(address contributor) public view returns (bool) {
+        return totalPaid[contributor] > 0 || pendingContribution[contributor] > 0;
     }
 
-    function isContributorWithoutPendingContributions(address contributor) public view return(bool) {
-        require(membership.isContributor(contributor), "Not a contributor registered");
-        return totalPaid[contributor] - pendingContribution[contributor] >= 0;
+    function isContributorWithoutPendingContributions(address contributor) public view returns (bool) {
+        require(isContributor(contributor), "Not a contributor registered");
+        return pendingContribution[contributor] == 0;
     }
 
     function releaseFunds(address payable recipient, uint256 amount) external onlyGovernance nonReentrant {
