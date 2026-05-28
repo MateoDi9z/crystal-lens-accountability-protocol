@@ -72,7 +72,7 @@ contract GovernanceTest is Test {
         governance.createProposal("Build new hospital");
 
         (uint256 id, address proposer, string memory description, uint256 votesFor, uint256 votesAgainst, Governance.ProposalState state) =
-            governance.proposals(proposalId);
+             governance.proposals(proposalId);
 
         assertEq(id, 0);
 
