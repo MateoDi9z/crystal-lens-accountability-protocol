@@ -78,7 +78,7 @@ contract Treasury is Ownable, ReentrancyGuard {
 
         emit ContributionPaid(msg.sender, msg.value);
     }
-    
+
     function deposit() external payable {
         require(msg.value > 0, "Amount must be greater than 0");
         if (pendingContribution[msg.sender] == 0 && totalPaid[msg.sender] == 0) {
@@ -90,7 +90,7 @@ contract Treasury is Ownable, ReentrancyGuard {
     }
 
     function getContributorCount() public view returns (uint256) {
-      return contributorCount;
+        return contributorCount;
     }
 
     function isContributor(address contributor) public view returns (bool) {

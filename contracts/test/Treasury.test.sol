@@ -118,13 +118,13 @@ contract TreasuryTest is Test {
 
     function testIsContributorWithoutPendingContributions() public {
         treasury.requestContribution(alice, 1 ether);
-        
+
         // Has pending contribution
         assertFalse(treasury.isContributorWithoutPendingContributions(alice));
 
         vm.prank(alice);
         treasury.payContribution{value: 1 ether}();
-        
+
         // No more pending contributions
         assertTrue(treasury.isContributorWithoutPendingContributions(alice));
     }
