@@ -8,6 +8,8 @@ contract MockTreasury {
     mapping(address => bool) public contributors;
 
     uint256 public contributorCount;
+    address public lastRecipient;
+    uint256 public lastAmount;
 
     function setContributor(address user, bool value) external {
         bool previous = contributors[user];
@@ -29,6 +31,11 @@ contract MockTreasury {
 
     function getContributorCount() external view returns (uint256) {
         return contributorCount;
+    }
+
+    function releaseFunds(address payable recipient, uint256 amount) external {
+        lastRecipient = recipient;
+        lastAmount = amount;
     }
 }
 
@@ -69,12 +76,13 @@ contract GovernanceTest is Test {
     // =====================================================
 
     function testOwnerCanCreateProposal() public {
-        governance.createProposal("Build new hospital");
+        governance.createProposal("Build new hospital", 10 ether);
 
         (
             uint256 id,
             address proposer,
             string memory description,
+            uint256 amount,
             uint256 votesFor,
             uint256 votesAgainst,
             Governance.ProposalState state
@@ -85,6 +93,8 @@ contract GovernanceTest is Test {
         assertEq(proposer, owner);
 
         assertEq(description, "Build new hospital");
+
+        assertEq(amount, 10 ether);
 
         assertEq(votesFor, 0);
 
@@ -98,7 +108,7 @@ contract GovernanceTest is Test {
 
         vm.expectRevert();
 
-        governance.createProposal("Malicious proposal");
+        governance.createProposal("Malicious proposal", 1 ether);
     }
 
     // =====================================================
@@ -106,13 +116,13 @@ contract GovernanceTest is Test {
     // =====================================================
 
     function testContributorCanVoteFor() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
 
         governance.vote(proposalId, true);
 
-        (,,, uint256 votesFor, uint256 votesAgainst, Governance.ProposalState state) = governance.proposals(proposalId);
+        (,,,, uint256 votesFor, uint256 votesAgainst, Governance.ProposalState state) = governance.proposals(proposalId);
 
         assertEq(votesFor, 1);
 
@@ -122,13 +132,13 @@ contract GovernanceTest is Test {
     }
 
     function testContributorCanVoteAgainst() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
 
         governance.vote(proposalId, false);
 
-        (,,, uint256 votesFor, uint256 votesAgainst, Governance.ProposalState state) = governance.proposals(proposalId);
+        (,,,, uint256 votesFor, uint256 votesAgainst, Governance.ProposalState state) = governance.proposals(proposalId);
 
         assertEq(votesFor, 0);
 
@@ -140,7 +150,7 @@ contract GovernanceTest is Test {
     function testNonContributorCannotVote() public {
         address randomUser = address(999);
 
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(randomUser);
 
@@ -150,7 +160,7 @@ contract GovernanceTest is Test {
     }
 
     function testCannotVoteTwice() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.startPrank(alice);
 
@@ -164,7 +174,7 @@ contract GovernanceTest is Test {
     }
 
     function testVoteGetsRegistered() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
 
@@ -188,7 +198,7 @@ contract GovernanceTest is Test {
     // =====================================================
 
     function testProposalNotApprovedBefore50Percent() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
         governance.vote(proposalId, true);
@@ -199,7 +209,7 @@ contract GovernanceTest is Test {
     }
 
     function testProposalApprovedAt50PercentForVotes() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
         governance.vote(proposalId, true);
@@ -211,13 +221,13 @@ contract GovernanceTest is Test {
 
         assertTrue(approved);
 
-        (,,,,, Governance.ProposalState state) = governance.proposals(proposalId);
+        (,,,,,, Governance.ProposalState state) = governance.proposals(proposalId);
 
         assertEq(uint8(state), uint8(Governance.ProposalState.Approved));
     }
 
     function testProposalRejectedAt50PercentAgainstVotes() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
         governance.vote(proposalId, false);
@@ -225,13 +235,13 @@ contract GovernanceTest is Test {
         vm.prank(bob);
         governance.vote(proposalId, false);
 
-        (,,,,, Governance.ProposalState state) = governance.proposals(proposalId);
+        (,,,,,, Governance.ProposalState state) = governance.proposals(proposalId);
 
         assertEq(uint8(state), uint8(Governance.ProposalState.Rejected));
     }
 
     function testProposalNotApprovedWithSplitVotes() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
         governance.vote(proposalId, true);
@@ -243,7 +253,7 @@ contract GovernanceTest is Test {
 
         assertFalse(approved);
 
-        (,,,,, Governance.ProposalState state) = governance.proposals(proposalId);
+        (,,,,,, Governance.ProposalState state) = governance.proposals(proposalId);
 
         assertEq(uint8(state), uint8(Governance.ProposalState.Pending));
     }
@@ -253,7 +263,7 @@ contract GovernanceTest is Test {
     // =====================================================
 
     function testCannotVoteApprovedProposal() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
         governance.vote(proposalId, true);
@@ -269,7 +279,7 @@ contract GovernanceTest is Test {
     }
 
     function testCannotVoteRejectedProposal() public {
-        governance.createProposal("Test");
+        governance.createProposal("Test", 1 ether);
 
         vm.prank(alice);
         governance.vote(proposalId, false);
@@ -289,17 +299,21 @@ contract GovernanceTest is Test {
     // =====================================================
 
     function testCanCreateMultipleProposals() public {
-        governance.createProposal("Proposal 1");
+        governance.createProposal("Proposal 1", 1 ether);
 
-        governance.createProposal("Proposal 2");
+        governance.createProposal("Proposal 2", 2 ether);
 
-        (uint256 id1,, string memory description1,,, Governance.ProposalState state1) = governance.proposals(0);
+        (uint256 id1,, string memory description1, uint256 amount1,,, Governance.ProposalState state1) =
+            governance.proposals(0);
 
-        (uint256 id2,, string memory description2,,, Governance.ProposalState state2) = governance.proposals(1);
+        (uint256 id2,, string memory description2, uint256 amount2,,, Governance.ProposalState state2) =
+            governance.proposals(1);
 
         assertEq(id1, 0);
 
         assertEq(description1, "Proposal 1");
+
+        assertEq(amount1, 1 ether);
 
         assertEq(uint8(state1), uint8(Governance.ProposalState.Pending));
 
@@ -307,6 +321,33 @@ contract GovernanceTest is Test {
 
         assertEq(description2, "Proposal 2");
 
+        assertEq(amount2, 2 ether);
+
         assertEq(uint8(state2), uint8(Governance.ProposalState.Pending));
+    }
+
+    function testApprovedProposalCanBeExecuted() public {
+        governance.createProposal("Build clinic", 3 ether);
+
+        vm.prank(alice);
+        governance.vote(proposalId, true);
+
+        vm.prank(bob);
+        governance.vote(proposalId, true);
+
+        governance.executeProposal(proposalId);
+
+        assertEq(treasury.lastRecipient(), owner);
+        assertEq(treasury.lastAmount(), 3 ether);
+
+        (,,,,,, Governance.ProposalState state) = governance.proposals(proposalId);
+        assertEq(uint8(state), uint8(Governance.ProposalState.Executed));
+    }
+
+    function testCannotExecuteUnapprovedProposal() public {
+        governance.createProposal("Build clinic", 3 ether);
+
+        vm.expectRevert("Proposal is not approved");
+        governance.executeProposal(proposalId);
     }
 }

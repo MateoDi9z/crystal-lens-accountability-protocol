@@ -3,33 +3,35 @@ pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {Membership} from "../src/Membership.sol";
-import {Treasury} from "../src/Treasury.sol";
 
-contract TreasuryMock is Treasury {
-    bool public isContributorWithoutPendingContributionResult;
+contract TreasuryMock {
+    bool public isContributorWithoutPendingContributionsResult = true;
+    uint256 public decrementCalls;
 
-    constructor(address membershipAddress, address _owner) Treasury(membershipAddress, _owner) {
-        isContributorWithoutPendingContributionResult = true;
+    function setIsContributorWithoutPendingContributionsResult(bool value) external {
+        isContributorWithoutPendingContributionsResult = value;
     }
 
-    function isContributorWithoutPendingContribution(address) public view returns (bool) {
-        return isContributorWithoutPendingContributionResult;
+    function isContributorWithoutPendingContributions(address) external view returns (bool) {
+        return isContributorWithoutPendingContributionsResult;
+    }
+
+    function decrementContributorCount() external {
+        decrementCalls++;
     }
 }
-
 
 contract MembershipTest is Test {
     Membership membership;
     TreasuryMock treasury;
 
     address owner = address(this);
-    address admin = address(5);
 
     address alice = address(1);
     address bob = address(2);
 
     function setUp() public {
-        treasury = new TreasuryMock(admin, owner);
+        treasury = new TreasuryMock();
         membership = new Membership("CLAP Membership 1", "CLAP-001", owner);
         membership.setTreasury(address(treasury));
     }
@@ -40,11 +42,8 @@ contract MembershipTest is Test {
 
     function testDeployment() public view {
         assertEq(membership.name(), "CLAP Membership 1");
-
         assertEq(membership.symbol(), "CLAP-001");
-
         assertEq(membership.decimals(), 0);
-
         assertEq(membership.owner(), owner);
     }
 
@@ -54,7 +53,6 @@ contract MembershipTest is Test {
 
     function testMintMember() public {
         membership.mint(alice);
-
         assertEq(membership.balanceOf(alice), 1);
     }
 
@@ -62,7 +60,6 @@ contract MembershipTest is Test {
         membership.mint(alice);
 
         vm.expectRevert("Already member");
-
         membership.mint(alice);
     }
 
@@ -70,7 +67,6 @@ contract MembershipTest is Test {
         vm.prank(alice);
 
         vm.expectRevert();
-
         membership.mint(bob);
     }
 
@@ -80,17 +76,27 @@ contract MembershipTest is Test {
 
     function testBurnMember() public {
         membership.mint(alice);
-        vm.prank(alice);
 
+        vm.prank(alice);
         membership.burn();
+
         assertEq(membership.balanceOf(alice), 0);
+        assertEq(treasury.decrementCalls(), 1);
     }
 
-    function testNonOwnerBurn() public {
+    function testNonMemberCannotBurn() public {
+        vm.prank(bob);
+
+        vm.expectRevert("Not a member");
+        membership.burn();
+    }
+
+    function testBurnRevertsWhenTreasuryRejectsContributorStatus() public {
         membership.mint(alice);
+        treasury.setIsContributorWithoutPendingContributionsResult(false);
 
         vm.prank(alice);
-
+        vm.expectRevert("Not a contributor or contribution pending");
         membership.burn();
     }
 
@@ -102,7 +108,6 @@ contract MembershipTest is Test {
         membership.mint(alice);
 
         vm.prank(alice);
-
         vm.expectRevert("Transfers disabled");
 
         bool res = membership.transfer(bob, 1);
@@ -113,7 +118,6 @@ contract MembershipTest is Test {
         membership.mint(alice);
 
         vm.prank(alice);
-
         vm.expectRevert("Transfers disabled");
 
         bool res = membership.transferFrom(alice, bob, 1);
@@ -124,7 +128,6 @@ contract MembershipTest is Test {
         membership.mint(alice);
 
         vm.prank(alice);
-
         vm.expectRevert("Approvals disabled");
 
         membership.approve(bob, 1);

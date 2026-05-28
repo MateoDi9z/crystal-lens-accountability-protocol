@@ -17,7 +17,7 @@ interface IMembership {
 
 contract Treasury is Ownable, ReentrancyGuard {
     IMembership public immutable membership;
-    
+
     address public governance;
     uint256 public totalFunds;
 
@@ -41,6 +41,11 @@ contract Treasury is Ownable, ReentrancyGuard {
         _;
     }
 
+    modifier onlyMembership() {
+        require(msg.sender == address(membership), "Only membership can call");
+        _;
+    }
+
     constructor(address membershipAddress, address _owner) Ownable(_owner) {
         require(membershipAddress != address(0), "Invalid membership address");
         require(_owner != address(0), "Invalid owner address");
@@ -58,7 +63,7 @@ contract Treasury is Ownable, ReentrancyGuard {
         require(membership.isMember(contributor), "Not an active member");
         require(amount > 0, "Amount must be greater than 0");
 
-        if (pendingContribution[contributor] == 0 && totalPaid[contributor] == 0) {
+        if (pendingContribution[contributor] == 0) {
             contributorCount += 1;
         }
         pendingContribution[contributor] += amount;
@@ -79,6 +84,11 @@ contract Treasury is Ownable, ReentrancyGuard {
 
     function getContributorCount() public view returns (uint256) {
         return contributorCount;
+    }
+
+    function decrementContributorCount() external onlyMembership {
+        require(contributorCount > 0, "Contributor count underflow");
+        contributorCount -= 1;
     }
 
     function getPendingContribution(address contributor) public view returns (uint256) {

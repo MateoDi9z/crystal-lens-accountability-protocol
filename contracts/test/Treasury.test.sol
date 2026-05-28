@@ -116,6 +116,7 @@ contract TreasuryTest is Test {
         (bool success,) = address(treasury).call{value: 1 ether}("");
         assertTrue(success);
         assertTrue(treasury.isContributor(stranger));
+        assertEq(treasury.getContributorCount(), 1);
     }
 
     function testIsContributorWithoutPendingContributions() public {
@@ -225,9 +226,24 @@ contract TreasuryTest is Test {
 
         assertEq(treasury.totalFunds(), 4 ether);
         assertEq(address(treasury).balance, 4 ether);
-        // Note: contributorCount won't increment in the current receive() logic
-        // because the user removed the incrementing logic from it.
-        // If it's expected to increment, we need to add it back to receive().
+        assertEq(treasury.getContributorCount(), 0);
+        assertEq(treasury.totalPaid(stranger), 0);
+    }
+
+    function testGovernanceCanRegisterContributorAfterReceive() public {
+        membership.mint(stranger);
+
+        vm.prank(stranger);
+        (bool success,) = address(treasury).call{value: 1 ether}("");
+        assertTrue(success);
+
+        assertEq(treasury.getContributorCount(), 0);
+
+        treasury.requestContribution(stranger, 1 ether);
+
+        assertEq(treasury.getContributorCount(), 1);
+        assertEq(treasury.pendingContribution(stranger), 1 ether);
+        assertEq(treasury.totalPaid(stranger), 1 ether);
     }
 
     // ==========================================
@@ -307,5 +323,19 @@ contract TreasuryTest is Test {
         // It should revert due to ReentrancyGuard (Failed to execute internal call / ReentrancyGuardReentrantCall)
         vm.expectRevert();
         attacker.attack();
+    }
+
+    function testContributorCountDecrementsOnBurn() public {
+        treasury.requestContribution(alice, 1 ether);
+        assertEq(treasury.getContributorCount(), 1);
+
+        vm.prank(alice);
+        treasury.payAllPendingContribution{value: 1 ether}();
+
+        vm.prank(alice);
+        membership.burn();
+
+        assertEq(treasury.getContributorCount(), 0);
+        assertEq(membership.balanceOf(alice), 0);
     }
 }

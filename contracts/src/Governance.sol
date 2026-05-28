@@ -12,6 +12,8 @@ interface ITreasury {
     function isContributor(address user) external view returns (bool);
 
     function getContributorCount() external view returns (uint256);
+
+    function releaseFunds(address payable recipient, uint256 amount) external;
 }
 
 contract Governance is Ownable {
@@ -35,6 +37,8 @@ contract Governance is Ownable {
 
     event ProposalRejected(uint256 indexed id);
 
+    event ProposalExecuted(uint256 indexed id, address indexed recipient, uint256 amount);
+
     // =====================================================
     // PROPOSALS
     // =====================================================
@@ -50,6 +54,7 @@ contract Governance is Ownable {
         uint256 id;
         address proposer;
         string description;
+        uint256 amount;
         uint256 forVotes;
         uint256 againstVotes;
         ProposalState state;
@@ -65,7 +70,9 @@ contract Governance is Ownable {
     // CREATE PROPOSAL
     // =====================================================
 
-    function createProposal(string memory _description) external onlyOwner {
+    function createProposal(string memory _description, uint256 _amount) external onlyOwner {
+        require(_amount > 0, "Amount must be greater than 0");
+
         uint256 id = _nextProposalId;
 
         _nextProposalId++;
@@ -74,6 +81,7 @@ contract Governance is Ownable {
             id: id,
             proposer: msg.sender,
             description: _description,
+            amount: _amount,
             forVotes: 0,
             againstVotes: 0,
             state: ProposalState.Pending
@@ -144,6 +152,18 @@ contract Governance is Ownable {
 
             emit ProposalRejected(_id);
         }
+    }
+
+    function executeProposal(uint256 _id) external {
+        require(_id < _nextProposalId, "Proposal does not exist");
+
+        Proposal storage proposal = proposals[_id];
+        require(proposal.state == ProposalState.Approved, "Proposal is not approved");
+
+        address payable recipient = payable(owner());
+        proposal.state = ProposalState.Executed;
+        treasury.releaseFunds(recipient, proposal.amount);
+        emit ProposalExecuted(_id, recipient, proposal.amount);
     }
 
     // =====================================================

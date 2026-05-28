@@ -8,12 +8,14 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 interface ITreasury {
-    function isContributorWithoutPendingContribution(address user) external view returns (bool);
+    function isContributorWithoutPendingContributions(address user) external view returns (bool);
+
+    function decrementContributorCount() external;
 }
 
 contract Membership is ERC20, Ownable {
     ITreasury public treasury;
-    
+
     event MemberAdded(address indexed member);
     event MemberRemoved(address indexed member);
 
@@ -26,15 +28,12 @@ contract Membership is ERC20, Ownable {
 
     function setTreasury(address treasury_) external onlyOwner {
         require(treasury_ != address(0), "Invalid treasury");
-        
+
         treasury = ITreasury(treasury_);
     }
 
     modifier whenTreasurySet() {
-        require(
-            address(treasury) != address(0),
-            "Treasury not set"
-        );
+        require(address(treasury) != address(0), "Treasury not set");
         _;
     }
 
@@ -61,9 +60,12 @@ contract Membership is ERC20, Ownable {
 
     function burn() external whenTreasurySet {
         require(isMember(msg.sender), "Not a member");
-        require(treasury.isContributorWithoutPendingContribution(msg.sender), "Not a contributor or contribution pending");
-        
+        require(
+            treasury.isContributorWithoutPendingContributions(msg.sender), "Not a contributor or contribution pending"
+        );
+
         _burn(msg.sender, 1);
+        treasury.decrementContributorCount();
         emit MemberRemoved(msg.sender);
     }
 
