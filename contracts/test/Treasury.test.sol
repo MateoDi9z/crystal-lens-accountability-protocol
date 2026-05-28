@@ -119,19 +119,20 @@ contract TreasuryTest is Test {
     function testIsContributorWithoutPendingContributions() public {
         treasury.requestContribution(alice, 1 ether);
 
-        // Has pending contribution
+        // Has pending contribution (totalPaid: 0, pending: 1)
         assertFalse(treasury.isContributorWithoutPendingContributions(alice));
 
         vm.prank(alice);
         treasury.payContribution{value: 1 ether}();
 
-        // No more pending contributions
+        // No more pending contributions (totalPaid: 1, pending: 1)
         assertTrue(treasury.isContributorWithoutPendingContributions(alice));
     }
 
     function testIsContributorWithoutPendingContributionsAfterDeposit() public {
         vm.prank(stranger);
         treasury.deposit{value: 1 ether}();
+        // totalPaid: 1, pending: 0
         assertTrue(treasury.isContributorWithoutPendingContributions(stranger));
     }
 
@@ -179,7 +180,8 @@ contract TreasuryTest is Test {
         vm.prank(alice);
         treasury.payContribution{value: 2 ether}();
 
-        assertEq(treasury.pendingContribution(alice), 0);
+        // In cumulative model, pendingContribution stays as the total requested
+        assertEq(treasury.pendingContribution(alice), 2 ether);
         assertEq(treasury.totalPaid(alice), 2 ether);
         assertEq(treasury.totalFunds(), 2 ether);
         assertEq(address(treasury).balance, 2 ether);
@@ -191,7 +193,7 @@ contract TreasuryTest is Test {
         vm.prank(alice);
         treasury.payContribution{value: 0.8 ether}();
 
-        assertEq(treasury.pendingContribution(alice), 1.2 ether);
+        assertEq(treasury.pendingContribution(alice), 2 ether);
         assertEq(treasury.totalPaid(alice), 0.8 ether);
         assertEq(treasury.totalFunds(), 0.8 ether);
     }
@@ -202,7 +204,7 @@ contract TreasuryTest is Test {
         vm.prank(alice);
         treasury.payContribution{value: 3 ether}(); // Overpays by 1 ETH
 
-        assertEq(treasury.pendingContribution(alice), 0);
+        assertEq(treasury.pendingContribution(alice), 2 ether);
         assertEq(treasury.totalPaid(alice), 3 ether);
         assertEq(treasury.totalFunds(), 3 ether);
         assertEq(address(treasury).balance, 3 ether);
@@ -240,12 +242,16 @@ contract TreasuryTest is Test {
     }
 
     function testReceiveFallback() public {
+        assertEq(treasury.getContributorCount(), 0);
+
         // Direct transfer to contract address
         (bool success,) = address(treasury).call{value: 4 ether}("");
         assertTrue(success);
 
         assertEq(treasury.totalFunds(), 4 ether);
         assertEq(address(treasury).balance, 4 ether);
+        assertEq(treasury.getContributorCount(), 1);
+        assertTrue(treasury.isContributor(address(this)));
     }
 
     // ==========================================

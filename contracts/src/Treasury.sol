@@ -67,12 +67,6 @@ contract Treasury is Ownable, ReentrancyGuard {
         uint256 pending = pendingContribution[msg.sender];
         require(pending > 0, "No pending contribution request");
 
-        if (msg.value >= pending) {
-            pendingContribution[msg.sender] = 0;
-        } else {
-            pendingContribution[msg.sender] -= msg.value;
-        }
-
         totalPaid[msg.sender] += msg.value;
         totalFunds += msg.value;
 
@@ -99,7 +93,7 @@ contract Treasury is Ownable, ReentrancyGuard {
 
     function isContributorWithoutPendingContributions(address contributor) public view returns (bool) {
         require(isContributor(contributor), "Not a contributor registered");
-        return pendingContribution[contributor] == 0;
+        return totalPaid[contributor] >= pendingContribution[contributor];
     }
 
     function releaseFunds(address payable recipient, uint256 amount) external onlyGovernance nonReentrant {
@@ -109,13 +103,18 @@ contract Treasury is Ownable, ReentrancyGuard {
 
         totalFunds -= amount;
 
-        (bool success,) = recipient.call{value: amount}("");
-        require(success, "ETH transfer failed");
+        recipient.transfer(amount);
 
         emit FundsReleased(recipient, amount);
     }
 
     receive() external payable {
+        if (msg.value > 0) {
+            if (pendingContribution[msg.sender] == 0 && totalPaid[msg.sender] == 0) {
+                contributorCount += 1;
+            }
+            totalPaid[msg.sender] += msg.value;
+        }
         totalFunds += msg.value;
         emit FundsDeposited(msg.sender, msg.value);
     }
