@@ -80,14 +80,16 @@ contract Membership is ERC721, Ownable {
     // MEMBERSHIP LOGIC
     // =========================
 
-    function mint(address to) external onlyOwner whenTreasurySet returns (uint256) {
+    function mint(address to, MemberData calldata memberData) external onlyOwner whenTreasurySet returns (uint256) {
         require(to != address(0), "Invalid address");
-
         require(!isMember(to), "Already member");
+        require(bytes(memberData.dni).length > 0, "DNI required");
+        require(bytes(memberData.fullName).length > 0, "Full name required");
 
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _memberTokenId[to] = tokenId;
+        _memberData[tokenId] = memberData;
         emit MemberAdded(to, tokenId);
         return tokenId;
     }

@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {Membership} from "../src/Membership.sol";
+import {MemberData, Membership} from "../src/Membership.sol";
 import {Treasury} from "../src/Treasury.sol";
 
 // Mock contract to test reentrancy security on releaseFunds
@@ -49,8 +49,8 @@ contract TreasuryTest is Test {
         treasury.setGovernance(governance);
 
         // 4. Mint memberships to Alice and Bob (making them active members)
-        membership.mint(alice);
-        membership.mint(bob);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
+        membership.mint(bob, MemberData("87654321", "Bob Jones"));
 
         // Fund test accounts and this contract for testing payable transactions
         vm.deal(alice, 10 ether);
@@ -231,7 +231,7 @@ contract TreasuryTest is Test {
     }
 
     function testGovernanceCanRegisterContributorAfterReceive() public {
-        membership.mint(stranger);
+        membership.mint(stranger, MemberData("00000000", "Stranger"));
 
         vm.prank(stranger);
         (bool success,) = address(treasury).call{value: 1 ether}("");

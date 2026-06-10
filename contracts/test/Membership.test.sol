@@ -51,7 +51,7 @@ contract MembershipTest is Test {
     // =========================
 
     function testMintMember() public {
-        uint256 tokenId = membership.mint(alice);
+        uint256 tokenId = membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         assertEq(membership.balanceOf(alice), 1);
         assertEq(membership.ownerOf(tokenId), alice);
@@ -59,22 +59,22 @@ contract MembershipTest is Test {
     }
 
     function testCannotMintTwice() public {
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         vm.expectRevert("Already member");
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
     }
 
     function testNonOwnerCannotMint() public {
         vm.prank(alice);
 
         vm.expectRevert();
-        membership.mint(bob);
+        membership.mint(bob, MemberData("87654321", "Bob Jones"));
     }
 
     function testTokenIdIncrements() public {
-        uint256 tokenId1 = membership.mint(alice);
-        uint256 tokenId2 = membership.mint(bob);
+        uint256 tokenId1 = membership.mint(alice, MemberData("12345678", "Alice Smith"));
+        uint256 tokenId2 = membership.mint(bob, MemberData("87654321", "Bob Jones"));
 
         assertEq(tokenId1, 1);
         assertEq(tokenId2, 2);
@@ -87,7 +87,7 @@ contract MembershipTest is Test {
     // =========================
 
     function testSetTokenURI() public {
-        uint256 tokenId = membership.mint(alice);
+        uint256 tokenId = membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         membership.setTokenURI(tokenId, "https://example.com/metadata/1");
 
@@ -99,7 +99,7 @@ contract MembershipTest is Test {
     // =========================
 
     function testSetMemberData() public {
-        uint256 tokenId = membership.mint(alice);
+        uint256 tokenId = membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         membership.setMemberData(tokenId, "12345678", "Alice Smith");
 
@@ -109,7 +109,7 @@ contract MembershipTest is Test {
     }
 
     function testNonOwnerCannotSetMemberData() public {
-        uint256 tokenId = membership.mint(alice);
+        uint256 tokenId = membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         vm.prank(alice);
         vm.expectRevert();
@@ -117,7 +117,7 @@ contract MembershipTest is Test {
     }
 
     function testGetMemberDataRevertsForBurnedToken() public {
-        uint256 tokenId = membership.mint(alice);
+        uint256 tokenId = membership.mint(alice, MemberData("12345678", "Alice Smith"));
         membership.setMemberData(tokenId, "12345678", "Alice Smith");
 
         vm.prank(alice);
@@ -128,7 +128,7 @@ contract MembershipTest is Test {
     }
 
     function testNonOwnerCannotSetTokenURI() public {
-        uint256 tokenId = membership.mint(alice);
+        uint256 tokenId = membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         vm.prank(alice);
         vm.expectRevert();
@@ -140,7 +140,7 @@ contract MembershipTest is Test {
     // =========================
 
     function testBurnMember() public {
-        uint256 tokenId = membership.mint(alice);
+        uint256 tokenId = membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         vm.prank(alice);
         membership.burn();
@@ -159,7 +159,7 @@ contract MembershipTest is Test {
     }
 
     function testBurnRevertsWhenTreasuryRejectsContributorStatus() public {
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
         treasury.setIsContributorWithoutPendingContributionsResult(false);
 
         vm.prank(alice);
@@ -172,7 +172,7 @@ contract MembershipTest is Test {
     // =========================
 
     function testCannotTransfer() public {
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         vm.prank(alice);
         vm.expectRevert("Non-transferable token");
@@ -180,7 +180,7 @@ contract MembershipTest is Test {
     }
 
     function testCannotSafeTransfer() public {
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         vm.prank(alice);
         vm.expectRevert("Non-transferable token");
@@ -188,7 +188,7 @@ contract MembershipTest is Test {
     }
 
     function testCannotApprove() public {
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         vm.prank(alice);
         vm.expectRevert("Approvals disabled");
@@ -196,7 +196,7 @@ contract MembershipTest is Test {
     }
 
     function testCannotSetApprovalForAll() public {
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         vm.prank(alice);
         vm.expectRevert("Approvals disabled");
@@ -218,7 +218,7 @@ contract MembershipTest is Test {
     function testIsMember() public {
         assertFalse(membership.isMember(alice));
 
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
         assertTrue(membership.isMember(alice));
 
         vm.prank(alice);
@@ -227,7 +227,7 @@ contract MembershipTest is Test {
     }
 
     function testBurnRemovesMembership() public {
-        membership.mint(alice);
+        membership.mint(alice, MemberData("12345678", "Alice Smith"));
 
         assertEq(membership.balanceOf(alice), 1);
 
