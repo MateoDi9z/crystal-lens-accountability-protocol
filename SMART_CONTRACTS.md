@@ -1,635 +1,238 @@
-# CLAP — Arquitectura Final de Smart Contracts
+# CLAP — Arquitectura de Smart Contracts
 
-# 🌎 Contexto General
+## Contexto General
 
-CLAP (Crystal Lens Accountability Protocol) es una plataforma de gobernanza descentralizada orientada a organizaciones y comunidades que administran fondos comunes.
+CLAP (Crystal Lens Accountability Protocol) es un sistema de gobernanza para organizaciones que administran fondos comunes. Todo ocurre on-chain — sin backend, sin base de datos, únicamente smart contracts y eventos.
 
-La aplicación permitirá:
+## Modelo Arquitectónico
 
-- registrar contribuyentes
-- gestionar propuestas
-- votar propuestas
-- administrar fondos comunes
-- exigir contribuciones pendientes para habilitar votación
-
-La solución estará completamente on-chain:
-
-- sin backend tradicional
-- sin base de datos
-- utilizando únicamente smart contracts y eventos
-
----
-
-# 🏛️ Modelo Arquitectónico
-
-La arquitectura final estará compuesta por 3 contratos separados:
-
-```txt
-Membership.sol
-Governance.sol
-Treasury.sol
 ```
-
-Cada deploy representa UNA organización.
-
-Es decir:
-
-```txt
 1 organización = 1 set de contratos
 ```
 
-Ejemplo:
-
-```txt
-Municipalidad A
-    -> Membership A
-    -> Governance A
-    -> Treasury A
-
-Hospital B
-    -> Membership B
-    -> Governance B
-    -> Treasury B
 ```
-
-Esto elimina la complejidad multi-organización dentro del mismo deployment.
-
----
-
-# 🎯 Objetivos del Diseño
-
-La arquitectura busca:
-
-- simplicidad
-- modularidad
-- claridad conceptual
-- facilidad de testing
-- facilidad de integración frontend
-- minimizar complejidad innecesaria
-
----
-
-# 📦 CONTRATO 1 — Membership.sol
-
-# Responsabilidad
-
-Gestionar:
-
-- identidad de contribuyentes
-- membresías
-- permisos de participación
-
----
-
-# 🪙 Modelo de Membership
-
-El contrato utilizará ERC20 únicamente como mecanismo estándar y auditado de ownership/membership.
-
-Cada contribuyente poseerá:
-
-```txt
-1 token ERC20
-```
-
-representando pertenencia a la organización.
-
----
-
-# ⚠️ IMPORTANTE — Soulbound ERC20
-
-El token será completamente NON-TRANSFERABLE.
-
-No representa:
-
-- dinero
-- acciones
-- ownership financiero
-
-Representa únicamente:
-
-```txt
-pertenencia a la organización
+Membership.sol   (ERC721 soulbound)
+Treasury.sol     (fondos + contribuciones)
+Governance.sol   (propuestas + votación)
 ```
 
 ---
 
-# 🔒 Transferencias Bloqueadas
+## Membership.sol — ERC721 Soulbound
 
-El contrato bloqueará:
+### Responsabilidad
+Gestionar la identidad de los miembros mediante tokens no transferibles (soulbound).
 
-- transfer
-- transferFrom
-- approve
-- allowance
-
-Esto evita:
-
-- venta de membresías
-- delegación de votos
-- transferencia de identidad
-
----
-
-# 👤 Gestión de Miembros
-
-Solo el owner de la organización puede:
-
-- agregar miembros
-- remover miembros
-
----
-
-# ➕ Alta de Miembro
-
-Cuando se agrega un miembro:
-
-1. se valida que no sea miembro ya
-2. se mintea 1 token ERC20
-3. se registra pendingContribution en Treasury
-
----
-
-# ➖ Baja de Miembro
-
-Cuando se elimina un miembro:
-
-1. se quema el token ERC20
-2. pierde derecho de voto
-3. los votos históricos permanecen válidos
-
----
-
-# 📌 Estado Esperado
-
-Un usuario es miembro si:
-
+### Contrato
 ```solidity
-balanceOf(user) > 0
+contract Membership is ERC721, Ownable
 ```
 
----
+### Modelo
+Cada miembro recibe **1 token ERC721** (NFT) que representa su pertenencia:
+- **Non-transferable** — no se puede vender, transferir ni delegar
+- **MemberData** adjunto al token: `dni` (string) y `fullName` (string)
+- Soporta `tokenURI` por token para metadata
 
-# 📡 Dependencias
+### Funciones principales
 
-Membership conoce:
+| Función | Acceso | Descripción |
+|---------|--------|-------------|
+| `mint(to)` | onlyOwner | Mintea un NFT a un nuevo miembro |
+| `burn()` | member | Auto-eliminación si no tiene pending contributions |
+| `setTokenURI(tokenId, uri)` | onlyOwner | Metadata del NFT |
+| `setMemberData(tokenId, dni, fullName)` | onlyOwner | Datos de identidad |
+| `isMember(user)` | public | `balanceOf(user) > 0` |
+| `getMemberTokenId(member)` | view | Token ID del miembro |
+| `getMemberData(tokenId)` | view | DNI y nombre del miembro |
 
+### Soulbound Logic
 ```solidity
-Treasury treasury;
+function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
+    address from = _ownerOf(tokenId);
+    if (from != address(0) && to != address(0)) {
+        revert("Non-transferable token");
+    }
+    return super._update(to, tokenId, auth);
+}
 ```
+- No se permite transferencia entre addresses no-zero
+- `approve()`, `getApproved()`, `setApprovalForAll()`, `isApprovedForAll()` están deshabilitados
 
-para registrar pending contributions iniciales.
-
----
-
-# 📦 CONTRATO 2 — Treasury.sol
-
-# Responsabilidad
-
-Gestionar:
-
-- fondos de la organización
-- pending contributions
-- pagos de contribuyentes
-- custodia de ETH
+### Dependencias
+Membership conoce `ITreasury` para verificar `isContributorWithoutPendingContributions()` al hacer `burn()`.
 
 ---
 
-# 💰 Pending Contributions
+## Treasury.sol — Fondos y Contribuciones
 
-Cada contribuyente tiene:
+### Responsabilidad
+Custodiar fondos, trackear contribuciones pendientes y pagadas, y liberar fondos cuando Governance lo aprueba.
 
+### Contrato
 ```solidity
-mapping(address => uint256)
-public pendingContribution;
+contract Treasury is Ownable, ReentrancyGuard
 ```
 
-Representa cuánto debe aportar antes de poder votar.
-
----
-
-# 🧾 Regla Principal
-
-Un contribuyente SOLO puede votar si:
-
+### Storage
 ```solidity
-pendingContribution[user] == 0
-```
-
----
-
-# 💸 Pago de Contribuciones
-
-El Treasury tendrá una función:
-
-```solidity
-payContribution()
-```
-
-que permitirá:
-
-- enviar ETH
-- pagar total o parcialmente
-- reducir pendingContribution
-
----
-
-# 📈 Pago Parcial
-
-Ejemplo:
-
-```txt
-pending = 100
-
-paga 40
-
-nuevo pending = 60
-```
-
----
-
-# 🏦 Custodia de Fondos
-
-Todo ETH recibido:
-
-- queda almacenado en Treasury
-- no sale automáticamente
-- solo Governance puede liberar fondos
-
----
-
-# 🔐 Permisos
-
-Treasury tendrá:
-
-```solidity
+IMembership public immutable membership;
 address public governance;
-address public membership;
+uint256 public totalFunds;
+mapping(address => uint256) public pendingContribution;
+mapping(address => uint256) public totalPaid;
+uint256 contributorCount;
 ```
+
+### Funciones principales
+
+| Función | Acceso | Descripción |
+|---------|--------|-------------|
+| `requestContribution(contributor, amount)` | onlyOwner | Asigna contribución pendiente |
+| `payAllPendingContribution()` | onlyMember, payable | Paga el monto exacto pendiente |
+| `releaseFunds(recipient, amount)` | onlyGovernance, nonReentrant | Libera fondos a un recipient |
+| `getContributorCount()` | view | Total de contribuyentes registrados |
+| `getPendingContribution(contributor)` | view | Deuda pendiente |
+| `isContributor(user)` | view | `totalPaid > 0 \|\| pendingContribution > 0` |
+| `isContributorWithoutPendingContributions(user)` | view | `totalPaid >= pendingContribution` |
+| `decrementContributorCount()` | onlyMembership | Reduce contador al hacer burn |
+
+### Reglas importantes
+- `payAllPendingContribution()` requiere que `msg.value == pendingContribution` (pago exacto, no parcial)
+- `receive()` permite depósitos directos de ETH
+- Solo Governance puede liberar fondos
+- ReentrancyGuard activo en `releaseFunds`
 
 ---
 
-# 🛡️ Restricciones
+## Governance.sol — Propuestas y Votación
 
-Solo Membership puede:
+### Responsabilidad
+Gestionar propuestas, votación y ejecución de gastos aprobados.
 
-```txt
-crear pending contributions
-```
-
-Solo Governance puede:
-
-```txt
-liberar fondos
-```
-
----
-
-# 💸 Liberación de Fondos
-
-Cuando Governance aprueba una proposal:
-
-```txt
-Governance -> Treasury.releaseFunds(...)
-```
-
-Treasury transfiere ETH al recipient indicado.
-
----
-
-# 🔒 Seguridad
-
-Treasury utilizará:
-
+### Contrato
 ```solidity
-ReentrancyGuard
+contract Governance is Ownable
 ```
 
-especialmente en:
-
-- payContribution
-- releaseFunds
-
----
-
-# 📦 CONTRATO 3 — Governance.sol
-
-# Responsabilidad
-
-Gestionar:
-
-- propuestas
-- votaciones
-- aprobación de gastos
-- liberación de fondos
-
----
-
-# 📌 Modelo de Votación
-
-Cada miembro:
-
-- puede votar una sola vez
-- tiene exactamente 1 voto
-- debe tener pendingContribution == 0
-
----
-
-# 🗳️ Proposals
-
-Cada proposal tendrá:
-
+### Proposal
 ```solidity
 struct Proposal {
     uint256 id;
     address proposer;
-    string title;
     string description;
     uint256 amount;
-    address payable recipient;
-    uint256 votesFor;
-    uint256 votesAgainst;
-    uint256 endBlock;
-    ProposalStatus status;
+    uint256 forVotes;
+    uint256 againstVotes;
+    ProposalState state;  // Pending | Approved | Rejected | Executed
 }
 ```
 
----
-
-# 📌 Estados de Proposal
-
+### Storage
 ```solidity
-enum ProposalStatus {
-    Active,
-    Approved,
-    Rejected,
-    Executed
+ITreasury public immutable treasury;
+mapping(uint256 => Proposal) public proposals;
+mapping(uint256 => mapping(address => bool)) public voted;
+uint256 private _nextProposalId;
+```
+
+### Funciones principales
+
+| Función | Acceso | Descripción |
+|---------|--------|-------------|
+| `createProposal(description, amount)` | onlyOwner | Crea nueva propuesta |
+| `vote(id, support)` | contributor | Vota a favor o en contra |
+| `executeProposal(id)` | public | Ejecuta propuesta aprobada |
+| `getProposal(id)` | view | Datos de la propuesta |
+| `isApproved(id)` / `isPending(id)` / `isExecuted(id)` | view | Estado helpers |
+
+### Reglas de Votación
+1. Solo contributors (con pending o no) pueden votar
+2. Un voto por persona por propuesta
+3. `forVotes` y `againstVotes` se incrementan según `_support`
+4. **Auto-resolución**: después de cada voto, si `forVotes >= threshold` → Approved, si `againstVotes >= threshold` → Rejected
+5. Threshold = `(totalContributors + 1) / 2` (>50%)
+
+### Ejecución
+```solidity
+function executeProposal(uint256 _id) external {
+    Proposal storage proposal = proposals[_id];
+    require(proposal.state == ProposalState.Approved, "Proposal is not approved");
+    address payable recipient = payable(owner());
+    proposal.state = ProposalState.Executed;
+    treasury.releaseFunds(recipient, proposal.amount);
 }
 ```
+- Los fondos se liberan al `owner()` del contrato Governance
+- No hay `endBlock` ni `recipient` configurable en la propuesta
 
 ---
 
-# 📡 Storage Principal
+## Flujo Completo
 
-```solidity
-mapping(uint256 => Proposal)
-public proposals;
+```
+1. Deploy
+   Owner deployea Membership, Treasury, Governance
+   Owner configura Treasury en Membership
+   Owner configura Governance en Treasury
+
+2. Registrar miembro
+   Owner → Membership.mint(user)
+   Membership mintea ERC721
+   Owner → Treasury.requestContribution(user, amount)
+
+3. Contribuir
+   Miembro → Treasury.payAllPendingContribution{value: amount}()
+   pendingContribution[user] = 0
+
+4. Crear propuesta
+   Owner → Governance.createProposal("description", amount)
+
+5. Votar
+   Contributor → Governance.vote(id, true/false)
+   Si forVotes >= threshold → Approved
+   Si againstVotes >= threshold → Rejected
+
+6. Ejecutar
+   Cualquiera → Governance.executeProposal(id)
+   Governance → Treasury.releaseFunds(owner, amount)
 ```
 
----
-
-# 🗳️ Registro de Votos
-
-```solidity
-mapping(uint256 => mapping(address => bool))
-public hasVoted;
-```
-
----
-
-# 🧾 Reglas para Votar
-
-Para votar:
-
-1. debe ser miembro
-2. no debe haber votado
-3. proposal debe estar activa
-4. voting period no debe haber terminado
-5. pendingContribution debe ser 0
-
----
-
-# 📌 Snapshotting
-
-NO habrá snapshotting.
-
-La regla será:
-
-```txt
-cualquier miembro actual puede votar
-```
-
-aunque haya ingresado luego de creada la proposal.
-
-Esto reduce complejidad significativamente.
-
----
-
-# 🏁 Finalización de Proposal
-
-Cuando termina el voting period:
-
-```solidity
-finalizeProposal(...)
-```
-
-determina:
-
-- Approved
-- Rejected
-
----
-
-# 💸 Ejecución
-
-Si la proposal se aprueba:
-
-```txt
-Governance llama Treasury.releaseFunds(...)
-```
-
-automáticamente.
-
----
-
-# 🔐 Dependencias
-
-Governance conoce:
-
-```solidity
-Membership membership;
-Treasury treasury;
-```
-
----
-
-# 🔄 Flujo Completo del Sistema
-
-# 1. Deploy
-
-Se deployean:
-
-```txt
-Membership
-Treasury
-Governance
-```
-
-para una organización.
-
----
-
-# 2. Alta de miembro
-
-Owner:
-
-```txt
-addMember(user)
-```
-
-Membership:
-
-- mintea 1 token
-- registra pendingContribution
-
----
-
-# 3. Pago
-
-Contributor:
-
-```txt
-payContribution()
-```
-
-Treasury:
-
-- recibe ETH
-- reduce pendingContribution
-
----
-
-# 4. Proposal
-
-Miembro crea proposal.
-
----
-
-# 5. Voting
-
-Miembros al día votan.
-
----
-
-# 6. Finalización
-
-Governance aprueba/rechaza.
-
----
-
-# 7. Ejecución
-
-Treasury libera fondos automáticamente.
-
----
-
-# 🔒 Decisiones de Diseño
-
-# ✅ ERC20 en lugar de mappings manuales
-
-Se eligió ERC20 porque:
-
-- estándar auditado
-- ownership ya resuelto
-- tooling compatible
-- frontend más simple
-- integración fácil con ethers.js
-
----
-
-# ✅ No Transferible
-
-Las memberships son soulbound.
-
----
-
-# ✅ Un deployment por organización
-
-Reduce enormemente:
-
-- complejidad
-- permisos
-- relaciones
-- storage
-- frontend
-
----
-
-# ✅ Sin snapshots
-
-Reduce complejidad de governance.
-
----
-
-# ✅ Governance simple
-
-Cada miembro:
-
-```txt
-1 wallet = 1 voto
-```
-
----
-
-# 🚫 Features Fuera de Scope
-
-No se implementará:
-
-- quadratic voting
-- delegated voting
-- snapshots
-- reputation systems
-- NFTs
-- multi-org deployments
-- KYC real
-- governance tokens transferibles
-- backend off-chain
-
----
-
-# 🧪 Testing Esperado
-
-# Membership
-
+## Decisiones de Diseño
+
+| Decisión | Razón |
+|----------|-------|
+| ERC721 en vez de ERC20 | Identidad única por miembro, metadata adjunta, sin fraccionamiento |
+| Soulbound | Evita venta/delegación de membresía |
+| Pago exacto | Simplifica contabilidad, evita decimales |
+| Auto-resolución | Sin deadlines, sin timeouts, resolución inmediata al alcanzar mayoría |
+| Un deploy por org | Aísla completamente cada organización |
+| Owner crea proposals | Control centralizado del uso de fondos |
+| Sin snapshots | Reducción de complejidad |
+
+## Testing
+
+### Membership
 - mint member
-- burn member
+- burn member (con y sin pending)
 - prevent transfers
 - prevent approvals
-- validate membership
+- set/read member data
+- set token URI
 
----
-
-# Treasury
-
-- assign pending contribution
-- partial payments
-- full payments
-- release funds
-- access control
+### Treasury
+- request contribution
+- pay exact contribution
+- reject partial payment
+- release funds (solo governance)
+- reject non-member payments
 - reentrancy protection
 
----
-
-# Governance
-
-- create proposal
-- vote
+### Governance
+- create proposal (solo owner)
+- vote for/against
 - prevent double vote
-- reject non-members
-- reject members with pendingContribution
-- finalize proposal
+- reject non-contributors
+- auto-approve at threshold
+- auto-reject at threshold
 - execute approved proposal
-
----
-
-# 🚀 Resultado Final
-
-Una DAO simple y modular donde:
-
-- una organización administra contribuyentes
-- los miembros realizan aportes
-- solo miembros al día votan
-- las propuestas controlan uso de fondos
-- Treasury custodia el capital
-- Governance decide liberación
-- Membership controla identidad
-- todo ocurre on-chain
