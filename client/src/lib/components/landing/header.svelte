@@ -54,11 +54,11 @@
 		<div class="flex items-center gap-2">
 			<ModeToggle />
 			<div class="bg-border mx-1 hidden h-5 w-px sm:block"></div>
-			<Button variant="ghost" size="sm" class="hidden sm:inline-flex gap-1.5" disabled>
+			<Button variant="ghost" size="sm" href="/app" class="hidden sm:inline-flex gap-1.5">
 				<LogIn class="size-3.5" />
 				Sign In
 			</Button>
-			<Button size="sm" class="gap-1.5">
+			<Button size="sm" href="/app" class="gap-1.5">
 				Get Started
 				<ArrowRight class="size-3.5" />
 			</Button>

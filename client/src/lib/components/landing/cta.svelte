@@ -68,27 +68,19 @@
 			viewport={{ once: true }}
 		>
 			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-				<Button size="lg" class="gap-2 px-8 text-base">
+				<Button size="lg" href="/app" class="gap-2 px-8 text-base">
 					Get Started
 					<ArrowRight class="size-4" />
 				</Button>
 			</motion.div>
 			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-				<Button size="lg" variant="outline" class="gap-2 px-8 text-base" disabled>
+				<Button size="lg" variant="outline" href="/app" class="gap-2 px-8 text-base">
 					<LogIn class="size-4" />
 					Sign In
 				</Button>
 			</motion.div>
 		</motion.div>
 
-		<motion.p
-			class="text-muted-foreground/50 mt-4 text-xs"
-			initial={{ opacity: 0 }}
-			whileInView={{ opacity: 1 }}
-			transition={{ delay: 0.5 }}
-			viewport={{ once: true }}
-		>
-			Sign in coming soon
-		</motion.p>
+
 	</motion.div>
 </section>
