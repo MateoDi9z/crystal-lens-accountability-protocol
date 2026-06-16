@@ -30,7 +30,7 @@
 	];
 </script>
 
-<section class="relative px-4 py-24 sm:py-32">
+<section class="section-surface relative px-4 py-24 sm:py-32">
 	<div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
 		<div
 			class="absolute left-1/2 top-1/3 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-10 blur-[120px]"
@@ -49,7 +49,7 @@
 			<Badge variant="secondary" class="mb-4">How It Works</Badge>
 			<h2 class="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
 				From Setup to
-				<span class="bg-linear-to-r from-sky-400 via-indigo-400 to-teal-400 bg-clip-text text-transparent">
+				<span class="text-gradient-brand">
 					Execution
 				</span>
 			</h2>
@@ -72,7 +72,7 @@
 					>
 						<div class="flex shrink-0 items-start gap-4 md:w-48 md:flex-col md:gap-2">
 							<motion.div
-								class="bg-card text-foreground relative z-10 flex size-16 shrink-0 items-center justify-center rounded-xl border text-lg font-bold shadow-xs md:size-20 md:text-2xl"
+								class="bg-card text-foreground relative z-10 flex size-16 shrink-0 items-center justify-center rounded-xl border border-border/80 text-lg font-bold shadow-sm md:size-20 md:text-2xl dark:shadow-xs"
 								whileHover={{ scale: 1.05, rotate: [0, -2, 2, 0] }}
 								transition={{ duration: 0.3 }}
 							>

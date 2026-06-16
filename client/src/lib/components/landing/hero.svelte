@@ -12,12 +12,12 @@
 <section class="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 pt-24">
 	<div class="pointer-events-none absolute inset-0 -z-10">
 		<Iridescence
-			color={[0.4, 0.5, 0.9]}
+			color={[0.35, 0.45, 0.85]}
 			speed={0.6}
 			amplitude={0.15}
-			class="h-full w-full opacity-40 dark:opacity-30"
+			class="h-full w-full opacity-25 dark:opacity-30"
 		/>
-		<div class="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background"></div>
+		<div class="absolute inset-0 bg-gradient-to-b from-sky-100/30 via-background/50 to-background dark:from-transparent dark:via-background/30"></div>
 	</div>
 
 	<motion.div
@@ -31,7 +31,7 @@
 			animate={{ opacity: 1, scale: 1 }}
 			transition={{ duration: 0.4, delay: 0.2 }}
 		>
-			<Badge variant="outline" class="gap-1.5 px-3 py-1 text-xs tracking-wide uppercase">
+			<Badge variant="outline" class="gap-1.5 border-primary/20 bg-primary/5 px-3 py-1 text-xs tracking-wide uppercase">
 				<Sparkles class="size-3" />
 				<span>Transparent Governance Protocol</span>
 			</Badge>
@@ -40,7 +40,7 @@
 		<h1 class="max-w-4xl text-balance text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
 			<span class="text-foreground">Governance That's</span>
 			<br />
-			<span class="bg-linear-to-r from-sky-400 via-indigo-400 to-teal-400 bg-clip-text text-transparent">
+			<span class="text-gradient-brand">
 				<MorphingText
 					texts={[
 						"Transparent by Design",

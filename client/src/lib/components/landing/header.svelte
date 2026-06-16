@@ -21,7 +21,9 @@
 <svelte:window onscroll={onScroll} />
 
 <header
-	class={scrolled ? "fixed top-0 right-0 left-0 z-50 border-b bg-background/80 backdrop-blur-xl transition-all duration-300" : "fixed top-0 right-0 left-0 z-50 border-transparent bg-background/0 transition-all duration-300"}
+	class={scrolled
+		? "fixed top-0 right-0 left-0 z-50 border-b border-border/60 bg-background/75 shadow-sm backdrop-blur-xl transition-all duration-300 dark:border-border dark:shadow-none"
+		: "fixed top-0 right-0 left-0 z-50 border-transparent bg-transparent transition-all duration-300"}
 >
 	<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
 		<a

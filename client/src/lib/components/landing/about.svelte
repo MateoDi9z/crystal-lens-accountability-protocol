@@ -60,7 +60,7 @@
 			</motion.div>
 			<h2 class="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
 				Infrastructure for
-				<span class="bg-linear-to-r from-sky-400 via-indigo-400 to-teal-400 bg-clip-text text-transparent">
+				<span class="text-gradient-brand">
 					Accountable Organizations
 				</span>
 			</h2>
@@ -87,7 +87,7 @@
 						transition={{ duration: 0.2 }}
 						class="h-full"
 					>
-						<Card class="group h-full transition-shadow duration-300 hover:shadow-lg">
+						<Card class="group h-full border-border/80 bg-card/90 shadow-sm transition-all duration-300 hover:border-primary/20 hover:shadow-lg dark:bg-card">
 							<CardHeader>
 								<motion.div
 									class="bg-primary/10 text-primary mb-3 flex size-10 items-center justify-center rounded-lg"

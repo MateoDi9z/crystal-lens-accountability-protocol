@@ -9,7 +9,7 @@
 	];
 </script>
 
-<section class="border-y px-4 py-12">
+<section class="section-surface border-y border-border/60 px-4 py-12">
 	<div class="mx-auto max-w-6xl">
 		<div class="grid grid-cols-2 gap-8 md:grid-cols-4">
 			{#each stats as stat, i}
