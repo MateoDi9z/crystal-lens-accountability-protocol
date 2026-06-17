@@ -203,6 +203,37 @@ Presentación completa:
 
 ---
 
+# Sepolia Testnet & Faucets
+
+El proyecto está diseñado para funcionar en la red de pruebas de Ethereum **Sepolia**. 
+
+## ¿Cómo obtener Sepolia ETH?
+Para interactuar con la dApp (pagar contribuciones, crear propuestas o votar), necesitas Sepolia ETH. Puedes obtenerlo de forma gratuita a través de los siguientes faucets:
+- **Alchemy Sepolia Faucet**: [sepoliafaucet.com](https://sepoliafaucet.com/) (Requiere cuenta de Alchemy)
+- **QuickNode Sepolia Faucet**: [faucet.quicknode.com/drip](https://faucet.quicknode.com/drip)
+- **Sepolia PoW Faucet**: [sepolia-faucet.pk910.de](https://sepolia-faucet.pk910.de/) (Minería en navegador sin requisitos)
+- **Infura Sepolia Faucet**: [www.infura.io/faucet/sepolia](https://www.infura.io/faucet/sepolia) (Requiere cuenta de Infura)
+
+## Flujo de la Aplicación
+1. **Conexión**: El usuario conecta su wallet mediante **Reown AppKit** (soporta wallets inyectadas como Metamask, o via WalletConnect).
+2. **Descubrir Organizaciones**: Visualización pública de las organizaciones y su estado de tesorería, miembros y propuestas.
+3. **Pagar Contribuciones**: Desde el panel personal (`/dashboard`), los miembros registrados pueden ver sus deudas pendientes y pagarlas en un clic enviando Sepolia ETH al contrato.
+4. **Votación**: Una vez que el usuario está al día (deuda = 0), puede votar a favor o en contra de las propuestas activas de su organización.
+5. **Administración (Owner)**: Los creadores de la organización pueden registrar nuevos contribuidores, asignar deudas adicionales y proponer el uso de fondos.
+
+---
+
+## Deploy de Smart Contracts en Sepolia
+
+Para desplegar los contratos en Sepolia, asegúrate de configurar las variables de entorno necesarias y ejecutar:
+
+```bash
+cd contracts
+forge script script/DeploySepolia.s.sol --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast --verify
+```
+
+---
+
 # 🧪 Desarrollo Local
 
 ## Requisitos

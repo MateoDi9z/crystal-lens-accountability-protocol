@@ -33,17 +33,17 @@ Todo usa los smart contracts como infraestructura (Sepolia). La experiencia debe
 
 ## Fases y tareas paso a paso (orden recomendado)
 
-### Fase 0 — Preparación y documentación
-1. Crear `client/.env.example` con:
+### Fase 0 — Preparación y documentación (Completado)
+1. [x] Crear `client/.env.example` con:
    - VITE_REOWN_PROJECT_ID
    - VITE_CHAIN_ID=11155111
    - VITE_RPC_URL (Sepolia)
    - Variables para 1-3 orgs (SLUG, NAME, MEMBERSHIP, TREASURY, GOVERNANCE)
-2. Actualizar READMEs (raíz y client) con:
+2. [x] Actualizar READMEs (raíz y client) con:
    - Instrucciones de Sepolia
    - Cómo obtener Sepolia ETH (lista de faucets)
    - Flujo nuevo de la app
-3. Documentar este PLAN.md (este archivo).
+3. [x] Documentar este PLAN.md (este archivo).
 
 ### Fase 1 — Contratos en Sepolia
 1. Crear o adaptar script de deploy para Sepolia (`script/DeploySepolia.s.sol` o mejorar el actual).
