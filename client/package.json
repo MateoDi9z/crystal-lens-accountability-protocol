@@ -40,9 +40,14 @@
 		"vite": "^8.0.7"
 	},
 	"dependencies": {
+		"@reown/appkit": "^1.8.20",
+		"@reown/appkit-adapter-wagmi": "^1.8.20",
+		"@wagmi/core": "^3.5.0",
 		"motion-sv": "^0.1.12",
 		"runed": "^0.37.1",
 		"svelte-bits": "^0.0.2",
-		"svogl": "^0.0.9"
+		"svogl": "^0.0.9",
+		"viem": "^2.52.2",
+		"wagmi": "^3.6.16"
 	}
 }

@@ -8,6 +8,15 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+
+	namespace svelteHTML {
+		interface IntrinsicElements {
+			"appkit-button": Record<string, unknown>;
+			"appkit-connect-button": Record<string, unknown>;
+			"appkit-account-button": Record<string, unknown>;
+			"appkit-network-button": Record<string, unknown>;
+		}
+	}
 }
 
 export {};

@@ -4,7 +4,7 @@
 	import { Gem } from "@lucide/svelte";
 </script>
 
-<footer class="border-t px-4 py-12">
+<footer class="border-t border-border/60 bg-muted/30 px-4 py-12 dark:bg-transparent">
 	<div class="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center">
 		<motion.a
 			href="/"

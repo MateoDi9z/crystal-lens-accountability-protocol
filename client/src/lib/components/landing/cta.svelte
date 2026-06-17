@@ -14,9 +14,9 @@
 			hoverIntensity={0.3}
 			rotateOnHover={false}
 			forceHoverState={true}
-			class="h-full w-full opacity-30 dark:opacity-20"
+			class="h-full w-full opacity-20 dark:opacity-20"
 		/>
-		<div class="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background"></div>
+		<div class="absolute inset-0 bg-gradient-to-b from-indigo-100/20 via-background/60 to-background dark:from-transparent dark:via-background/40"></div>
 	</div>
 
 	<motion.div
@@ -41,7 +41,7 @@
 		<h2 class="mb-6 text-3xl font-bold tracking-tight sm:text-4xl">
 			Ready to Make Your Organization
 			<br />
-			<span class="bg-linear-to-r from-sky-400 via-indigo-400 to-teal-400 bg-clip-text text-transparent">
+			<span class="text-gradient-brand">
 				Crystal Clear
 			</span>?
 		</h2>
@@ -68,27 +68,19 @@
 			viewport={{ once: true }}
 		>
 			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-				<Button size="lg" class="gap-2 px-8 text-base">
+				<Button size="lg" href="/app" class="gap-2 px-8 text-base">
 					Get Started
 					<ArrowRight class="size-4" />
 				</Button>
 			</motion.div>
 			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-				<Button size="lg" variant="outline" class="gap-2 px-8 text-base" disabled>
+				<Button size="lg" variant="outline" href="/app" class="gap-2 px-8 text-base">
 					<LogIn class="size-4" />
 					Sign In
 				</Button>
 			</motion.div>
 		</motion.div>
 
-		<motion.p
-			class="text-muted-foreground/50 mt-4 text-xs"
-			initial={{ opacity: 0 }}
-			whileInView={{ opacity: 1 }}
-			transition={{ delay: 0.5 }}
-			viewport={{ once: true }}
-		>
-			Sign in coming soon
-		</motion.p>
+
 	</motion.div>
 </section>

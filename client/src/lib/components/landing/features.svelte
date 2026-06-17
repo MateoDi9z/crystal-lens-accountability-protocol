@@ -35,7 +35,7 @@
 			</motion.div>
 			<h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
 				Built for
-				<span class="bg-linear-to-r from-sky-400 via-indigo-400 to-teal-400 bg-clip-text text-transparent">
+				<span class="text-gradient-brand">
 					Clarity
 				</span>
 				<motion.span
@@ -58,7 +58,7 @@
 				>
 					<motion.div
 						whileHover={{ x: 3, scale: 1.02 }}
-						class="border-border hover:border-foreground/30 flex items-start gap-3 rounded-xl border p-4 transition-colors duration-200"
+						class="border-border/80 bg-card/70 hover:border-primary/25 hover:bg-card flex items-start gap-3 rounded-xl border p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-transparent dark:shadow-none dark:hover:bg-transparent"
 					>
 						<feature.icon class="text-primary mt-0.5 size-4 shrink-0" />
 						<div>

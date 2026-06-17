@@ -16,8 +16,9 @@
 				"Real identity registration",
 				"Admin-managed roster"
 			],
-			gradient: "from-sky-500/20 via-sky-500/5 to-transparent",
-			iconColor: "text-sky-400"
+			gradient: "from-sky-500/15 via-sky-500/5 to-transparent",
+			iconColor: "text-sky-600 dark:text-sky-400",
+			iconBg: "bg-sky-500/10 dark:bg-foreground/5"
 		},
 		{
 			icon: Banknote,
@@ -30,8 +31,9 @@
 				"Secure fund custody",
 				"Vote-controlled spending"
 			],
-			gradient: "from-teal-500/20 via-teal-500/5 to-transparent",
-			iconColor: "text-teal-400"
+			gradient: "from-teal-500/15 via-teal-500/5 to-transparent",
+			iconColor: "text-teal-600 dark:text-teal-400",
+			iconBg: "bg-teal-500/10 dark:bg-foreground/5"
 		},
 		{
 			icon: Vote,
@@ -44,8 +46,9 @@
 				"Majority-based voting",
 				"Automatic execution"
 			],
-			gradient: "from-indigo-500/20 via-indigo-500/5 to-transparent",
-			iconColor: "text-indigo-400"
+			gradient: "from-indigo-500/15 via-indigo-500/5 to-transparent",
+			iconColor: "text-indigo-600 dark:text-indigo-400",
+			iconBg: "bg-indigo-500/10 dark:bg-foreground/5"
 		}
 	];
 </script>
@@ -62,7 +65,7 @@
 			<Badge variant="secondary" class="mb-4">Architecture</Badge>
 			<h2 class="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
 				Three Modules,
-				<span class="bg-linear-to-r from-sky-400 via-indigo-400 to-teal-400 bg-clip-text text-transparent">
+				<span class="text-gradient-brand">
 					One Organization
 				</span>
 			</h2>
@@ -81,25 +84,28 @@
 					transition={{ duration: 0.6, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
 					viewport={{ once: true, margin: "-80px" }}
 					whileHover={{ y: -4 }}
-					class="group relative flex flex-col overflow-hidden rounded-2xl border p-8 transition-all duration-300"
-					style={`background-image: linear-gradient(to bottom, ${pillar.gradient});`}
+					class="group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card/80 p-8 shadow-sm transition-all duration-300 hover:border-primary/20 hover:shadow-md dark:bg-transparent dark:shadow-none dark:hover:border-border"
 				>
+					<div
+						class="pointer-events-none absolute inset-0 bg-linear-to-b {pillar.gradient} opacity-80"
+						aria-hidden="true"
+					></div>
 					<motion.div
-						class="bg-foreground/5 mb-6 flex size-14 items-center justify-center rounded-xl"
+						class="{pillar.iconBg} relative mb-6 flex size-14 items-center justify-center rounded-xl"
 						whileHover={{ rotate: [0, -8, 8, 0], scale: 1.1 }}
 						transition={{ duration: 0.3 }}
 					>
 						<pillar.icon class="{pillar.iconColor} size-7" />
 					</motion.div>
 
-					<Badge variant="outline" class="mb-4 w-fit text-xs">{pillar.tag}</Badge>
+					<Badge variant="outline" class="relative mb-4 w-fit text-xs">{pillar.tag}</Badge>
 
-					<h3 class="mb-3 text-xl font-semibold">{pillar.title}</h3>
-					<p class="text-muted-foreground mb-6 flex-1 text-sm leading-relaxed">
+					<h3 class="relative mb-3 text-xl font-semibold">{pillar.title}</h3>
+					<p class="text-muted-foreground relative mb-6 flex-1 text-sm leading-relaxed">
 						{pillar.description}
 					</p>
 
-					<ul class="space-y-2">
+					<ul class="relative space-y-2">
 						{#each pillar.details as detail}
 							<li class="flex items-center gap-2 text-sm">
 								<ShieldCheck class="size-3.5 shrink-0 text-green-500" />

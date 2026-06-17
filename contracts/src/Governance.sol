@@ -100,6 +100,10 @@ contract Governance is Ownable {
         return proposals[_id];
     }
 
+    function proposalCount() external view returns (uint256) {
+        return _nextProposalId;
+    }
+
     // =====================================================
     // VOTING
     // =====================================================
