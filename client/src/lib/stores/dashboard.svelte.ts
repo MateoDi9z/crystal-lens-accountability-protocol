@@ -1,5 +1,6 @@
 import { getAccount, watchAccount } from "@wagmi/core";
 import { getWagmiConfig } from "$lib/web3/appkit";
+import { refreshSepoliaBalance } from "$lib/web3/balance";
 import { publicClient } from "$lib/web3/client";
 import { parseWalletError } from "$lib/web3/errors";
 import { getAllOrgs } from "$lib/config/orgs";
@@ -104,6 +105,7 @@ export function setupWalletWatcher() {
 				isConnectedState = account.isConnected;
 				chainIdState = account.chainId;
 				if (account.address) {
+					void refreshSepoliaBalance(account.address);
 					refreshAllOrgsDashboard(account.address);
 				} else {
 					dashboardState.allOrgsData = [];
@@ -118,6 +120,10 @@ export function setupWalletWatcher() {
 		walletAddress = initialAccount.address;
 		isConnectedState = initialAccount.isConnected;
 		chainIdState = initialAccount.chainId;
+
+		if (initialAccount.address) {
+			void refreshSepoliaBalance(initialAccount.address);
+		}
 	} catch (error) {
 		console.error("Error setting up account watcher:", error);
 	}

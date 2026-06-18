@@ -11,9 +11,9 @@ declare global {
 
 	namespace svelteHTML {
 		interface IntrinsicElements {
-			"appkit-button": Record<string, unknown>;
+			"appkit-button": { balance?: "show" | "hide"; disabled?: boolean };
 			"appkit-connect-button": Record<string, unknown>;
-			"appkit-account-button": Record<string, unknown>;
+			"appkit-account-button": { balance?: "show" | "hide"; disabled?: boolean };
 			"appkit-network-button": Record<string, unknown>;
 		}
 	}

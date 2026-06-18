@@ -1,27 +1,16 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { motion } from "motion-sv";
 	import { Gem } from "@lucide/svelte";
 	import ModeToggle from "$lib/components/landing/mode-toggle.svelte";
 	import { onMount } from "svelte";
-	import { getDashboardState } from "$lib/stores/dashboard.svelte";
 	import { appPaths } from "$lib/config/paths";
-	import { Button } from "$lib/components/ui/button/index.js";
-	import { getAppKit } from "$lib/web3/appkit";
 	import { initWeb3 } from "$lib/web3/init";
-
-	const dashboard = getDashboardState();
 
 	const links = [
 		{ label: "Discover", href: appPaths.discover },
 		{ label: "Dashboard", href: appPaths.dashboard }
 	];
-
-	function shortAddress(address?: string) {
-		if (!address) return "";
-		return `${address.slice(0, 6)}…${address.slice(-4)}`;
-	}
 
 	function isActive(href: string) {
 		return page.url.pathname === href || page.url.pathname.startsWith(`${href}/`);
@@ -30,11 +19,6 @@
 	onMount(() => {
 		void initWeb3();
 	});
-
-	async function connect() {
-		await initWeb3();
-		getAppKit()?.open({ view: "Connect" });
-	}
 </script>
 
 <header
@@ -68,19 +52,7 @@
 		<div class="flex items-center gap-2">
 			<ModeToggle />
 			<div class="bg-border mx-1 hidden h-5 w-px sm:block"></div>
-
-			{#if dashboard.isConnected}
-				<Badge variant="secondary" class="hidden gap-1 sm:inline-flex">
-					<span class="size-1.5 rounded-full bg-emerald-500"></span>
-					Conectado
-				</Badge>
-				<span class="text-muted-foreground hidden font-mono text-xs lg:inline">
-					{shortAddress(dashboard.address)}
-				</span>
-				<appkit-account-button></appkit-account-button>
-			{:else}
-				<Button size="sm" onclick={connect}>Conectar</Button>
-			{/if}
+			<appkit-button balance="show"></appkit-button>
 		</div>
 	</div>
 </header>
