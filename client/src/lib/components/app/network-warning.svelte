@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
 	import { AlertCircle } from "@lucide/svelte";
-	import { appKit } from "$lib/web3/appkit";
+	import { getAppKit } from "$lib/web3/appkit";
+	import { initWeb3 } from "$lib/web3/init";
 	import { SEPOLIA_CHAIN_ID } from "$lib/stores/dashboard.svelte";
 
-	function switchNetwork() {
-		appKit?.open({ view: "Networks" });
+	async function switchNetwork() {
+		await initWeb3();
+		getAppKit()?.open({ view: "Networks" });
 	}
 </script>
 

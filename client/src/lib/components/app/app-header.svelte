@@ -4,9 +4,12 @@
 	import { motion } from "motion-sv";
 	import { Gem } from "@lucide/svelte";
 	import ModeToggle from "$lib/components/landing/mode-toggle.svelte";
+	import { onMount } from "svelte";
 	import { getDashboardState } from "$lib/stores/dashboard.svelte";
 	import { appPaths } from "$lib/config/paths";
-	import "$lib/web3/appkit";
+	import { Button } from "$lib/components/ui/button/index.js";
+	import { getAppKit } from "$lib/web3/appkit";
+	import { initWeb3 } from "$lib/web3/init";
 
 	const dashboard = getDashboardState();
 
@@ -22,6 +25,15 @@
 
 	function isActive(href: string) {
 		return page.url.pathname === href || page.url.pathname.startsWith(`${href}/`);
+	}
+
+	onMount(() => {
+		void initWeb3();
+	});
+
+	async function connect() {
+		await initWeb3();
+		getAppKit()?.open({ view: "Connect" });
 	}
 </script>
 
@@ -67,7 +79,7 @@
 				</span>
 				<appkit-account-button></appkit-account-button>
 			{:else}
-				<appkit-connect-button></appkit-connect-button>
+				<Button size="sm" onclick={connect}>Conectar</Button>
 			{/if}
 		</div>
 	</div>

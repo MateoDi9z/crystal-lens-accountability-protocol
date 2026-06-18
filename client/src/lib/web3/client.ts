@@ -1,7 +1,7 @@
 import { createPublicClient, http } from "viem";
 import { sepolia } from "viem/chains";
 import { getWalletClient } from "@wagmi/core";
-import { wagmiConfig } from "./appkit";
+import { getWagmiConfig } from "./appkit";
 
 const rpcUrl = import.meta.env.VITE_RPC_URL || "https://rpc.ankr.com/eth_sepolia";
 
@@ -12,7 +12,7 @@ export const publicClient = createPublicClient({
 
 export async function getActiveWalletClient() {
 	try {
-		return await getWalletClient(wagmiConfig);
+		return await getWalletClient(getWagmiConfig());
 	} catch (error) {
 		console.error("Error getting active wallet client:", error);
 		return null;

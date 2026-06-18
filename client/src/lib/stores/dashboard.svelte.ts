@@ -1,5 +1,5 @@
 import { getAccount, watchAccount } from "@wagmi/core";
-import { wagmiConfig } from "$lib/web3/appkit";
+import { getWagmiConfig } from "$lib/web3/appkit";
 import { publicClient } from "$lib/web3/client";
 import { parseWalletError } from "$lib/web3/errors";
 import { getAllOrgs } from "$lib/config/orgs";
@@ -89,10 +89,16 @@ async function fetchVoteStatus(
 	return voteStatusMap;
 }
 
-// Watch account connection and update state
-if (typeof window !== "undefined") {
+let walletWatcherStarted = false;
+
+export function setupWalletWatcher() {
+	if (walletWatcherStarted || typeof window === "undefined") return;
+	walletWatcherStarted = true;
+
 	try {
-		watchAccount(wagmiConfig, {
+		const config = getWagmiConfig();
+
+		watchAccount(config, {
 			onChange(account) {
 				walletAddress = account.address;
 				isConnectedState = account.isConnected;
@@ -108,7 +114,7 @@ if (typeof window !== "undefined") {
 			}
 		});
 
-		const initialAccount = getAccount(wagmiConfig);
+		const initialAccount = getAccount(config);
 		walletAddress = initialAccount.address;
 		isConnectedState = initialAccount.isConnected;
 		chainIdState = initialAccount.chainId;
