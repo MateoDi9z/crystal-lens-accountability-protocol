@@ -44,9 +44,12 @@
 
 	{#if !dashboard.isConnected}
 		<ConnectPrompt />
-	{:else if dashboard.isWrongNetwork}
-		<NetworkWarning />
 	{:else}
+		{#if dashboard.isWrongNetwork}
+			<div class="mb-6">
+				<NetworkWarning />
+			</div>
+		{/if}
 		<div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4">
 			<div class="text-sm">
 				<p class="text-muted-foreground">Billetera conectada</p>

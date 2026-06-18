@@ -1,6 +1,7 @@
 import { getAccount, watchAccount } from "@wagmi/core";
 import { getWagmiConfig } from "$lib/web3/appkit";
-import { refreshSepoliaBalance } from "$lib/web3/balance";
+import { fetchSepoliaEthBalance, refreshSepoliaBalance } from "$lib/web3/balance";
+import { initWeb3 } from "$lib/web3/init";
 import { publicClient } from "$lib/web3/client";
 import { parseWalletError } from "$lib/web3/errors";
 import { getAllOrgs } from "$lib/config/orgs";
@@ -42,6 +43,8 @@ export interface OwnedOrgData {
 let walletAddress = $state<Address | undefined>(undefined);
 let isConnectedState = $state<boolean>(false);
 let chainIdState = $state<number | undefined>(undefined);
+let sepoliaEthBalanceState = $state<bigint | null>(null);
+let sepoliaBalanceLoadingState = $state(false);
 
 // Active organization state (legacy single-org views)
 let activeOrg = $state<OrgConfig>(getAllOrgs()[0]);
@@ -92,6 +95,24 @@ async function fetchVoteStatus(
 
 let walletWatcherStarted = false;
 
+export async function updateSepoliaEthBalance(address?: Address) {
+	if (!address) {
+		sepoliaEthBalanceState = null;
+		return;
+	}
+
+	sepoliaBalanceLoadingState = true;
+	try {
+		sepoliaEthBalanceState = await fetchSepoliaEthBalance(address);
+		void refreshSepoliaBalance(address);
+	} catch (error) {
+		console.warn("updateSepoliaEthBalance:", error);
+		sepoliaEthBalanceState = null;
+	} finally {
+		sepoliaBalanceLoadingState = false;
+	}
+}
+
 export function setupWalletWatcher() {
 	if (walletWatcherStarted || typeof window === "undefined") return;
 	walletWatcherStarted = true;
@@ -105,9 +126,10 @@ export function setupWalletWatcher() {
 				isConnectedState = account.isConnected;
 				chainIdState = account.chainId;
 				if (account.address) {
-					void refreshSepoliaBalance(account.address);
+					void updateSepoliaEthBalance(account.address);
 					refreshAllOrgsDashboard(account.address);
 				} else {
+					sepoliaEthBalanceState = null;
 					dashboardState.allOrgsData = [];
 					dashboardState.ownedOrgsData = [];
 					dashboardState.userStatus = null;
@@ -122,7 +144,7 @@ export function setupWalletWatcher() {
 		chainIdState = initialAccount.chainId;
 
 		if (initialAccount.address) {
-			void refreshSepoliaBalance(initialAccount.address);
+			void updateSepoliaEthBalance(initialAccount.address);
 		}
 	} catch (error) {
 		console.error("Error setting up account watcher:", error);
@@ -139,6 +161,8 @@ class DashboardState {
 	isWrongNetwork = $derived(
 		this.isConnected && this.chainId !== undefined && this.chainId !== SEPOLIA_CHAIN_ID
 	);
+	sepoliaEthBalance = $derived(sepoliaEthBalanceState);
+	sepoliaBalanceLoading = $derived(sepoliaBalanceLoadingState);
 
 	allOrgsData = $state<OrgUserData[]>([]);
 	ownedOrgsData = $state<OwnedOrgData[]>([]);
@@ -297,19 +321,25 @@ export async function runPayment(org: OrgConfig, amount: bigint) {
 	const address = walletAddress;
 	if (!address) return;
 
-	setPaymentFeedback(slug, { phase: "wallet", message: "Confirmá el pago en tu billetera…" });
+	setPaymentFeedback(slug, {
+		phase: "wallet",
+		message: "Confirmá el pago en el modal de tu billetera…"
+	});
 	dashboardState.actionLoading = `pay-${slug}`;
 
 	try {
-		const hash = await payPendingContribution(amount, org);
+		await initWeb3();
+		const hash = await payPendingContribution(amount, org, address);
 		setPaymentFeedback(slug, { phase: "processing", message: "Procesando tu pago…" });
 		await confirmTransaction(hash);
 		await refreshAllOrgsDashboard(address);
+		await updateSepoliaEthBalance(address);
 		setPaymentFeedback(slug, {
 			phase: "success",
 			message: "¡Listo! Tu contribución fue registrada. Ahora estás al día."
 		});
 	} catch (error) {
+		console.error("Payment failed:", error);
 		setPaymentFeedback(slug, {
 			phase: "error",
 			message: parseWalletError(error)
