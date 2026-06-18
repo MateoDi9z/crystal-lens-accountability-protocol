@@ -1,9 +1,10 @@
-import { getActiveWalletClient, publicClient } from "$lib/web3/client";
+import type { Abi, Address, ContractFunctionArgs, ContractFunctionName } from "viem";
+import { publicClient } from "$lib/web3/client";
+import { executeContractTransaction } from "$lib/web3/transactions";
 import { resolveOrgAddresses } from "./read";
 import { governanceAbi, treasuryAbi, membershipAbi } from "./abi";
 import { getActiveOrg } from "$lib/stores/dashboard.svelte";
 import type { OrgConfig } from "$lib/config/orgs";
-import type { Address } from "viem";
 
 function resolveOrg(org?: OrgConfig): OrgConfig {
 	const resolved = org ?? getActiveOrg();
@@ -11,92 +12,100 @@ function resolveOrg(org?: OrgConfig): OrgConfig {
 	return resolved;
 }
 
-export async function payPendingContribution(amount: bigint, org?: OrgConfig) {
+async function writeWithConnectedWallet<
+	TAbi extends Abi,
+	TFunctionName extends ContractFunctionName<TAbi, "payable" | "nonpayable">
+>(params: {
+	address: Address;
+	abi: TAbi;
+	functionName: TFunctionName;
+	args?: ContractFunctionArgs<TAbi, "payable" | "nonpayable", TFunctionName>;
+	value?: bigint;
+}): Promise<`0x${string}`> {
+	return executeContractTransaction({
+		address: params.address,
+		abi: params.abi,
+		functionName: params.functionName,
+		args: params.args,
+		value: params.value
+	});
+}
+
+export async function payPendingContribution(amount: bigint, org?: OrgConfig, payer?: Address) {
 	const activeOrg = resolveOrg(org);
 	const { treasury } = await resolveOrgAddresses(activeOrg);
 
-	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
-	const [address] = await walletClient.getAddresses();
+	if (payer) {
+		await publicClient.simulateContract({
+			address: treasury,
+			abi: treasuryAbi,
+			functionName: "payAllPendingContribution",
+			account: payer,
+			value: amount
+		});
+	}
 
-	const hash = await walletClient.writeContract({
+	return writeWithConnectedWallet({
 		address: treasury,
 		abi: treasuryAbi,
 		functionName: "payAllPendingContribution",
-		account: address,
 		value: amount
 	});
-	return hash;
 }
 
 export async function confirmTransaction(hash: `0x${string}`) {
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
-export async function registerContributor(to: Address, dni: string, fullName: string, amount: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { membership, treasury } = await resolveOrgAddresses(org);
+export async function registerContributor(
+	to: Address,
+	dni: string,
+	fullName: string,
+	amount: bigint,
+	org?: OrgConfig
+) {
+	const activeOrg = resolveOrg(org);
+	const { membership, treasury } = await resolveOrgAddresses(activeOrg);
 
-	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
-	const [address] = await walletClient.getAddresses();
-
-	// 1. Mint membership NFT
-	const mintHash = await walletClient.writeContract({
+	const mintHash = await writeWithConnectedWallet({
 		address: membership,
 		abi: membershipAbi,
 		functionName: "mint",
-		args: [to, { dni, fullName }],
-		account: address
+		args: [to, { dni, fullName }]
 	});
 	await publicClient.waitForTransactionReceipt({ hash: mintHash });
 
-	// 2. Request initial contribution debt
-	const debtHash = await walletClient.writeContract({
+	const debtHash = await writeWithConnectedWallet({
 		address: treasury,
 		abi: treasuryAbi,
 		functionName: "requestContribution",
-		args: [to, amount],
-		account: address
+		args: [to, amount]
 	});
 	return publicClient.waitForTransactionReceipt({ hash: debtHash });
 }
 
-export async function requestContribution(contributor: Address, amount: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { treasury } = await resolveOrgAddresses(org);
+export async function requestContribution(contributor: Address, amount: bigint, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { treasury } = await resolveOrgAddresses(activeOrg);
 
-	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
-	const [address] = await walletClient.getAddresses();
-
-	const hash = await walletClient.writeContract({
+	const hash = await writeWithConnectedWallet({
 		address: treasury,
 		abi: treasuryAbi,
 		functionName: "requestContribution",
-		args: [contributor, amount],
-		account: address
+		args: [contributor, amount]
 	});
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
-export async function createProposal(description: string, amount: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { governance } = await resolveOrgAddresses(org);
+export async function createProposal(description: string, amount: bigint, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { governance } = await resolveOrgAddresses(activeOrg);
 
-	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
-	const [address] = await walletClient.getAddresses();
-
-	const hash = await walletClient.writeContract({
+	const hash = await writeWithConnectedWallet({
 		address: governance,
 		abi: governanceAbi,
 		functionName: "createProposal",
-		args: [description, amount],
-		account: address
+		args: [description, amount]
 	});
 	return publicClient.waitForTransactionReceipt({ hash });
 }
@@ -105,35 +114,24 @@ export async function voteOnProposal(id: bigint, support: boolean, org?: OrgConf
 	const activeOrg = resolveOrg(org);
 	const { governance } = await resolveOrgAddresses(activeOrg);
 
-	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
-	const [address] = await walletClient.getAddresses();
-
-	const hash = await walletClient.writeContract({
+	const hash = await writeWithConnectedWallet({
 		address: governance,
 		abi: governanceAbi,
 		functionName: "vote",
-		args: [id, support],
-		account: address
+		args: [id, support]
 	});
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
-export async function executeProposal(id: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { governance } = await resolveOrgAddresses(org);
+export async function executeProposal(id: bigint, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { governance } = await resolveOrgAddresses(activeOrg);
 
-	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
-	const [address] = await walletClient.getAddresses();
-
-	const hash = await walletClient.writeContract({
+	const hash = await writeWithConnectedWallet({
 		address: governance,
 		abi: governanceAbi,
 		functionName: "executeProposal",
-		args: [id],
-		account: address
+		args: [id]
 	});
 	return publicClient.waitForTransactionReceipt({ hash });
 }

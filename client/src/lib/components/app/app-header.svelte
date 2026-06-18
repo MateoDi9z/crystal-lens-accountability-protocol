@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { motion } from "motion-sv";
 	import { Gem } from "@lucide/svelte";
+	import { formatEther } from "viem";
 	import ModeToggle from "$lib/components/landing/mode-toggle.svelte";
-	import { getDashboardState } from "$lib/stores/dashboard.svelte";
+	import { onMount } from "svelte";
 	import { appPaths } from "$lib/config/paths";
-	import "$lib/web3/appkit";
+	import { getDashboardState } from "$lib/stores/dashboard.svelte";
+	import { initWeb3 } from "$lib/web3/init";
 
 	const dashboard = getDashboardState();
 
@@ -15,14 +16,17 @@
 		{ label: "Dashboard", href: appPaths.dashboard }
 	];
 
-	function shortAddress(address?: string) {
-		if (!address) return "";
-		return `${address.slice(0, 6)}…${address.slice(-4)}`;
-	}
-
 	function isActive(href: string) {
 		return page.url.pathname === href || page.url.pathname.startsWith(`${href}/`);
 	}
+
+	function formatEthShort(wei: bigint) {
+		return Number.parseFloat(formatEther(wei)).toFixed(2);
+	}
+
+	onMount(() => {
+		void initWeb3();
+	});
 </script>
 
 <header
@@ -58,17 +62,19 @@
 			<div class="bg-border mx-1 hidden h-5 w-px sm:block"></div>
 
 			{#if dashboard.isConnected}
-				<Badge variant="secondary" class="hidden gap-1 sm:inline-flex">
-					<span class="size-1.5 rounded-full bg-emerald-500"></span>
-					Conectado
-				</Badge>
-				<span class="text-muted-foreground hidden font-mono text-xs lg:inline">
-					{shortAddress(dashboard.address)}
-				</span>
-				<appkit-account-button></appkit-account-button>
-			{:else}
-				<appkit-connect-button></appkit-connect-button>
+				{#if dashboard.sepoliaBalanceLoading}
+					<span class="text-muted-foreground hidden text-xs sm:inline">…</span>
+				{:else if dashboard.sepoliaEthBalance !== null}
+					<span
+						class="bg-muted/60 text-muted-foreground hidden rounded-md px-2 py-1 font-mono text-xs sm:inline"
+						title="Balance en Sepolia"
+					>
+						{formatEthShort(dashboard.sepoliaEthBalance)} ETH
+					</span>
+				{/if}
 			{/if}
+
+			<appkit-button balance="hide"></appkit-button>
 		</div>
 	</div>
 </header>

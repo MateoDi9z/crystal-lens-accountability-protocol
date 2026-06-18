@@ -23,12 +23,12 @@
 
 <Card class="border-primary/20 shadow-md">
 	<CardHeader>
-		<CardTitle class="flex items-center gap-2 text-2xl">
+		<CardTitle class="flex items-center gap-2 text-2xl font-bold tracking-tight">
 			<Banknote class="text-primary size-6" />
-			Tus contribuciones pendientes
+			Tus aportes pendientes
 		</CardTitle>
-		<CardDescription class="text-base">
-			Acá ves lo que debés a cada organización. Un clic y quedás al día.
+		<CardDescription class="text-base mt-1">
+			Acá podés ver y realizar los aportes acordados con tus organizaciones. Un par de clics y quedás al día.
 		</CardDescription>
 	</CardHeader>
 	<CardContent class="space-y-4">
@@ -47,15 +47,16 @@
 				{@const debt = getDebtRemaining(entry.userStatus)}
 				{@const feedback = dashboard.paymentFeedback[entry.org.slug]}
 				{@const isPaying = dashboard.actionLoading === `pay-${entry.org.slug}`}
-				<div class="border-border/80 rounded-xl border p-5">
-					<div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+				<div class="border-border/50 bg-muted/20 relative overflow-hidden rounded-2xl border p-6 shadow-sm transition-all hover:shadow-md">
+					<div class="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-amber-500 to-orange-400"></div>
+					<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
 						<div>
-							<p class="text-lg font-semibold">{entry.org.name}</p>
+							<p class="text-xl font-bold">{entry.org.name}</p>
 							<p class="text-muted-foreground mt-1 text-sm">
-								Debes <strong class="text-foreground">{formatEther(debt)} ETH</strong>
+								Monto pendiente: <strong class="text-foreground text-base">{formatEther(debt)} ETH</strong>
 							</p>
 						</div>
-						<Badge variant="destructive">Pago pendiente</Badge>
+						<Badge variant="outline" class="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400">Aporte requerido</Badge>
 					</div>
 
 					{#if feedback?.phase === "success"}
@@ -77,14 +78,14 @@
 
 					<Button
 						size="lg"
-						class="h-12 w-full gap-2 text-base font-semibold sm:w-auto sm:min-w-64"
+						class="h-12 w-full gap-2 text-base font-semibold sm:w-auto sm:min-w-[280px] bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 transition-opacity shadow-md"
 						disabled={isPaying || feedback?.phase === "success"}
 						onclick={() => pay(entry.org.slug, entry.userStatus.pendingContribution)}
 					>
 						{#if isPaying}
 							<Loader2 class="size-5 animate-spin" />
 						{/if}
-						Pagar {formatEther(entry.userStatus.pendingContribution)} ETH ahora
+						Realizar aporte ahora
 					</Button>
 				</div>
 			{/each}

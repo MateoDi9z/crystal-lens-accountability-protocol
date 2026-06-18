@@ -1,47 +1,89 @@
+import { browser } from "$app/environment";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { sepolia } from "@reown/appkit/networks";
 import { createAppKit } from "@reown/appkit";
-import { injected } from "@wagmi/connectors";
+import type { AppKit } from "@reown/appkit";
+import type { Config } from "@wagmi/core";
 
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || "your_reown_project_id_here";
 
 export const networks: [typeof sepolia, ...typeof sepolia[]] = [sepolia];
 
-export const wagmiAdapter = new WagmiAdapter({
-	projectId,
-	networks,
-	ssr: true,
-	connectors: [
-		injected({ target: "rabby", shimDisconnect: true }),
-		injected({ target: "metaMask", shimDisconnect: true })
-	]
-});
+let wagmiAdapter: WagmiAdapter | undefined;
+let wagmiConfig: Config | undefined;
+let appKit: AppKit | undefined;
 
-export const wagmiConfig = wagmiAdapter.wagmiConfig;
+function createWeb3() {
+	if (!browser || appKit) return;
 
-const metadata = {
-	name: "Crystal Lens",
-	description: "Crystal Lens Accountability Protocol",
-	url: typeof window !== "undefined" ? window.location.origin : "https://clap.example.com",
-	icons: ["https://avatars.githubusercontent.com/u/179229932"]
-};
+	wagmiAdapter = new WagmiAdapter({
+		projectId,
+		networks,
+		ssr: false,
+		multiInjectedProviderDiscovery: true
+	});
 
-export const appKit = createAppKit({
-	adapters: [wagmiAdapter],
-	networks,
-	projectId,
-	metadata,
-	defaultNetwork: sepolia,
-	showWallets: true,
-	enableEIP6963: true,
-	enableInjected: true,
-	allWallets: "SHOW",
-	featuredWalletIds: [
-		"c286eebc742a53775f673f716e18ab6c" // Rabby
-	],
-	features: {
-		analytics: false,
-		email: false,
-		socials: false
+	wagmiConfig = wagmiAdapter.wagmiConfig;
+
+	const metadata = {
+		name: "Crystal Lens",
+		description: "Crystal Lens Accountability Protocol",
+		url: window.location.origin,
+		icons: ["https://avatars.githubusercontent.com/u/179229932"]
+	};
+
+	appKit = createAppKit({
+		adapters: [wagmiAdapter],
+		networks,
+		projectId,
+		metadata,
+		defaultNetwork: sepolia,
+		showWallets: true,
+		enableEIP6963: true,
+		enableInjected: true,
+		allWallets: "SHOW",
+		features: {
+			analytics: false,
+			email: true,
+			emailShowWallets: true,
+			collapseWallets: false,
+			socials: ["google", "x", "discord", "github", "apple"],
+			connectMethodsOrder: ["wallet", "email", "social"],
+			connectorTypeOrder: [
+				"injected",
+				"recent",
+				"walletConnect",
+				"featured",
+				"recommended",
+				"custom",
+				"external"
+			]
+		},
+		defaultAccountTypes: {
+			eip155: "eoa"
+		}
+	});
+}
+
+export function getWagmiAdapter(): WagmiAdapter {
+	createWeb3();
+	if (!wagmiAdapter) {
+		throw new Error("Web3 is only available in the browser.");
 	}
-});
+	return wagmiAdapter;
+}
+
+export function getWagmiConfig(): Config {
+	createWeb3();
+	if (!wagmiConfig) {
+		throw new Error("Web3 is only available in the browser.");
+	}
+	return wagmiConfig;
+}
+
+export function getAppKit(): AppKit | undefined {
+	createWeb3();
+	return appKit;
+}
+
+export { appKit, wagmiConfig, wagmiAdapter };

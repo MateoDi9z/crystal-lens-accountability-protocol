@@ -42,12 +42,12 @@
 
 <Card>
 	<CardHeader>
-		<CardTitle class="flex items-center gap-2 text-xl">
-			<Vote class="text-primary size-5" />
-			Gobernanza
+		<CardTitle class="flex items-center gap-2 text-2xl font-bold tracking-tight">
+			<Vote class="text-primary size-6" />
+			Decisiones en curso
 		</CardTitle>
-		<CardDescription>
-			Votá propuestas de las organizaciones donde sos miembro y estás al día.
+		<CardDescription class="text-base mt-1">
+			Participá en las propuestas de tus organizaciones aportando tu voto.
 		</CardDescription>
 	</CardHeader>
 	<CardContent class="space-y-6">
@@ -55,7 +55,7 @@
 			<div class="border-amber-500/30 bg-amber-500/5 flex items-start gap-3 rounded-xl border p-4">
 				<AlertCircle class="mt-0.5 size-5 shrink-0 text-amber-600" />
 				<p class="text-sm">
-					Pagá tus contribuciones pendientes para poder votar en las propuestas.
+					Recordá que debés estar al día con tus aportes para poder participar en las votaciones.
 				</p>
 			</div>
 		{/if}
@@ -69,13 +69,13 @@
 				{@const pendingProposals = entry.proposals.filter(
 					(proposal) => proposal.state === ProposalState.Pending
 				)}
-				<div class="space-y-3">
-					<div class="flex flex-wrap items-center justify-between gap-2">
-						<h3 class="font-semibold">{entry.org.name}</h3>
+				<div class="space-y-4 rounded-2xl border border-border/50 bg-card p-5 shadow-sm">
+					<div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-4">
+						<h3 class="font-bold text-xl">{entry.org.name}</h3>
 						{#if entry.userStatus.canVote}
-							<Badge variant="secondary">Podés votar</Badge>
+							<Badge variant="secondary" class="bg-primary/10 text-primary hover:bg-primary/20">Podés votar</Badge>
 						{:else if entry.userStatus.isMember}
-							<Badge variant="outline">Sin derecho a voto</Badge>
+							<Badge variant="outline">Participación limitada</Badge>
 						{/if}
 					</div>
 
@@ -85,18 +85,19 @@
 						{#each pendingProposals as proposal (proposal.id)}
 							{@const voted = entry.votes[proposal.id.toString()]}
 							{@const canVote = entry.userStatus.canVote && !voted}
-							<div class="border-border/80 rounded-xl border p-4">
-								<div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-									<span class="font-medium">#{proposal.id.toString()}</span>
+							<div class="border-border/50 bg-muted/30 rounded-xl border p-5 transition-colors hover:bg-muted/50">
+								<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+									<span class="font-medium text-muted-foreground">Propuesta #{proposal.id.toString()}</span>
 									<Badge variant={stateVariant(proposal.state)}>
 										{proposalStateName(proposal.state)}
 									</Badge>
 								</div>
-								<p class="text-muted-foreground mb-3 text-sm">{proposal.description}</p>
-								<p class="text-muted-foreground mb-3 text-xs">
-									Monto: <strong class="text-foreground">{formatEther(proposal.amount)} ETH</strong>
-									· A favor: {proposal.forVotes.toString()} · En contra: {proposal.againstVotes.toString()}
-								</p>
+								<p class="text-foreground mb-4 text-base leading-relaxed">{proposal.description}</p>
+								<div class="text-muted-foreground mb-5 flex flex-wrap gap-4 text-sm bg-background/50 p-3 rounded-lg border border-border/50">
+									<span>Monto sugerido: <strong class="text-foreground">{formatEther(proposal.amount)} ETH</strong></span>
+									<span>A favor: <strong class="text-foreground">{proposal.forVotes.toString()}</strong></span>
+									<span>En contra: <strong class="text-foreground">{proposal.againstVotes.toString()}</strong></span>
+								</div>
 
 								{#if canVote}
 									<div class="flex flex-wrap gap-2">
@@ -125,7 +126,7 @@
 								{:else if voted}
 									<Badge variant="secondary">Ya votaste</Badge>
 								{:else if !entry.userStatus.canVote}
-									<Badge variant="outline">Pagá tus contribuciones para votar</Badge>
+									<Badge variant="outline" class="text-amber-600 border-amber-600/30">Regularizá tus aportes para votar</Badge>
 								{/if}
 							</div>
 						{/each}
