@@ -121,4 +121,8 @@ contract Treasury is Ownable, ReentrancyGuard {
         totalFunds += msg.value;
         emit FundsDeposited(msg.sender, msg.value);
     }
+
+    function getMembership() public view returns (address) {
+        return address(membership);
+    }
 }
