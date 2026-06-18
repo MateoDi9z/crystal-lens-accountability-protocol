@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { getOrg } from "$lib/config/orgs";
+	import { appPaths } from "$lib/config/paths";
 	import { getTreasuryOverview, getMembers, getProposals } from "$lib/contracts/read";
 	import TreasuryCard from "$lib/components/app/treasury-card.svelte";
 	import MembersList from "$lib/components/app/members-list.svelte";
@@ -94,7 +95,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-	<Button variant="ghost" size="sm" href="/discover" class="mb-6 gap-1.5">
+	<Button variant="ghost" size="sm" href={appPaths.discover} class="mb-6 gap-1.5">
 		<ArrowLeft class="size-4" />
 		Volver a Discover
 	</Button>

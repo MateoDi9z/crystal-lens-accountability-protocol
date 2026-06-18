@@ -2,15 +2,21 @@ import { getActiveWalletClient, publicClient } from "$lib/web3/client";
 import { resolveOrgAddresses } from "./read";
 import { governanceAbi, treasuryAbi, membershipAbi } from "./abi";
 import { getActiveOrg } from "$lib/stores/dashboard.svelte";
+import type { OrgConfig } from "$lib/config/orgs";
 import type { Address } from "viem";
 
-export async function payPendingContribution(amount: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { treasury } = await resolveOrgAddresses(org);
+function resolveOrg(org?: OrgConfig): OrgConfig {
+	const resolved = org ?? getActiveOrg();
+	if (!resolved) throw new Error("No hay organización seleccionada");
+	return resolved;
+}
+
+export async function payPendingContribution(amount: bigint, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { treasury } = await resolveOrgAddresses(activeOrg);
 
 	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Wallet not connected");
+	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
 	const [address] = await walletClient.getAddresses();
 
 	const hash = await walletClient.writeContract({
@@ -20,6 +26,10 @@ export async function payPendingContribution(amount: bigint) {
 		account: address,
 		value: amount
 	});
+	return hash;
+}
+
+export async function confirmTransaction(hash: `0x${string}`) {
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
@@ -29,7 +39,7 @@ export async function registerContributor(to: Address, dni: string, fullName: st
 	const { membership, treasury } = await resolveOrgAddresses(org);
 
 	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Wallet not connected");
+	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
 	const [address] = await walletClient.getAddresses();
 
 	// 1. Mint membership NFT
@@ -59,7 +69,7 @@ export async function requestContribution(contributor: Address, amount: bigint) 
 	const { treasury } = await resolveOrgAddresses(org);
 
 	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Wallet not connected");
+	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
 	const [address] = await walletClient.getAddresses();
 
 	const hash = await walletClient.writeContract({
@@ -78,7 +88,7 @@ export async function createProposal(description: string, amount: bigint) {
 	const { governance } = await resolveOrgAddresses(org);
 
 	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Wallet not connected");
+	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
 	const [address] = await walletClient.getAddresses();
 
 	const hash = await walletClient.writeContract({
@@ -91,13 +101,12 @@ export async function createProposal(description: string, amount: bigint) {
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
-export async function voteOnProposal(id: bigint, support: boolean) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { governance } = await resolveOrgAddresses(org);
+export async function voteOnProposal(id: bigint, support: boolean, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { governance } = await resolveOrgAddresses(activeOrg);
 
 	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Wallet not connected");
+	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
 	const [address] = await walletClient.getAddresses();
 
 	const hash = await walletClient.writeContract({
@@ -116,7 +125,7 @@ export async function executeProposal(id: bigint) {
 	const { governance } = await resolveOrgAddresses(org);
 
 	const walletClient = await getActiveWalletClient();
-	if (!walletClient) throw new Error("Wallet not connected");
+	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
 	const [address] = await walletClient.getAddresses();
 
 	const hash = await walletClient.writeContract({

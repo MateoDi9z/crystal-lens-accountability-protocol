@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getAllOrgs } from "$lib/config/orgs";
+	import { appPaths } from "$lib/config/paths";
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
@@ -40,7 +41,7 @@
 						<CardDescription class="line-clamp-3">{org.description}</CardDescription>
 					</CardHeader>
 					<CardContent class="mt-auto">
-						<Button href="/org/{org.slug}" class="w-full gap-2">
+						<Button href={appPaths.org(org.slug)} class="w-full gap-2">
 							Ver organización
 							<ArrowRight class="size-4" />
 						</Button>

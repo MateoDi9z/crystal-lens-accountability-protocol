@@ -1,11 +1,12 @@
 <script lang="ts">
-	import Header from "$lib/components/landing/header.svelte";
+	import AppHeader from "$lib/components/app/app-header.svelte";
 	import Footer from "$lib/components/landing/footer.svelte";
+	import "$lib/web3/appkit";
 
 	let { children } = $props();
 </script>
 
-<Header solid />
+<AppHeader />
 <main class="bg-background min-h-screen pt-16">
 	{@render children()}
 </main>

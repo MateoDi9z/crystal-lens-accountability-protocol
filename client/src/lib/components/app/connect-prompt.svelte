@@ -16,9 +16,9 @@
 		<div class="bg-primary/10 text-primary mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl">
 			<Gem class="size-7" />
 		</div>
-		<CardTitle class="text-2xl">Enter Crystal Lens</CardTitle>
+		<CardTitle class="text-2xl">Tu espacio personal</CardTitle>
 		<CardDescription class="text-base">
-			Connect with your wallet or social account to view treasury data, membership, and governance proposals.
+			Conectá tu billetera para ver tus contribuciones pendientes y votar propuestas.
 		</CardDescription>
 	</CardHeader>
 	<CardContent class="flex flex-col items-center gap-4">
@@ -26,15 +26,14 @@
 			<appkit-button></appkit-button>
 			<Button variant="outline" class="gap-2" onclick={connect}>
 				<Wallet class="size-4" />
-				Open connection modal
+				Conectar billetera
 			</Button>
-			<p class="text-muted-foreground text-center text-xs">
-				For local testing, connect MetaMask to <strong>Anvil (31337)</strong> at
-				<code class="text-foreground">http://127.0.0.1:8545</code>
+			<p class="text-muted-foreground text-center text-xs leading-relaxed">
+				Usá una billetera conectada a <strong class="text-foreground">Sepolia</strong> (red de prueba).
 			</p>
 		{:else}
 			<p class="text-destructive text-center text-sm">
-				Set <code>VITE_REOWN_PROJECT_ID</code> in <code>client/.env</code> to enable Reown.
+				Configurá <code>VITE_REOWN_PROJECT_ID</code> en <code>client/.env</code> para habilitar la conexión.
 			</p>
 		{/if}
 	</CardContent>

@@ -5,7 +5,7 @@
 	import { Fingerprint, Loader2 } from "@lucide/svelte";
 	import { formatEther } from "viem";
 	import type { UserStatus } from "$lib/contracts/types";
-	import { payPendingContribution } from "$lib/contracts/write";
+	import { confirmTransaction, payPendingContribution } from "$lib/contracts/write";
 	import { refreshDashboard, runAction, getDashboardState } from "$lib/stores/dashboard.svelte";
 
 	let { user }: { user: UserStatus } = $props();
@@ -14,7 +14,10 @@
 	async function payContribution() {
 		await runAction(
 			"pay",
-			() => payPendingContribution(user.pendingContribution),
+			async () => {
+				const hash = await payPendingContribution(user.pendingContribution);
+				await confirmTransaction(hash);
+			},
 			() => refreshDashboard(user.address)
 		);
 	}

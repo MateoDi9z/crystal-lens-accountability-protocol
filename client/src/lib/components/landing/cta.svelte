@@ -2,7 +2,8 @@
 	import { motion } from "motion-sv";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
-	import { ArrowRight, LogIn, Sparkles } from "@lucide/svelte";
+	import { ArrowRight, Sparkles } from "@lucide/svelte";
+	import { appPaths } from "$lib/config/paths";
 	import { Orb } from "svelte-bits";
 	import TextRotate from "./text-rotate.svelte";
 </script>
@@ -68,15 +69,9 @@
 			viewport={{ once: true }}
 		>
 			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-				<Button size="lg" href="/app" class="gap-2 px-8 text-base">
-					Get Started
+				<Button size="lg" href={appPaths.discover} class="gap-2 px-8 text-base">
+					Enter App
 					<ArrowRight class="size-4" />
-				</Button>
-			</motion.div>
-			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-				<Button size="lg" variant="outline" href="/app" class="gap-2 px-8 text-base">
-					<LogIn class="size-4" />
-					Sign In
 				</Button>
 			</motion.div>
 		</motion.div>
