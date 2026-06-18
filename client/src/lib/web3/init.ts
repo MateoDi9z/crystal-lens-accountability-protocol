@@ -38,16 +38,16 @@ export function initWeb3(): Promise<void> {
 					persist?: { rehydrate: () => Promise<void> };
 				};
 				await store.persist?.rehydrate();
-			} catch (error) {
-				console.warn("wagmi rehydrate:", error);
+			} catch {
+				// rehydrate opcional según versión de wagmi
 			}
 
 			await waitForInjectedConnectors(config);
 
 			try {
 				await adapter.syncConnectors();
-			} catch (error) {
-				console.error("syncConnectors failed:", error);
+			} catch {
+				// syncConnectors puede fallar sin bloquear la app
 			}
 
 			setupWalletWatcher();

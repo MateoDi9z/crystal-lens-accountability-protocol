@@ -34,7 +34,7 @@
 	/>
 </svelte:head>
 
-<div class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+<div class="mx-auto w-4/5 max-w-full px-4 py-10 sm:px-6">
 	<div class="mb-8">
 		<Badge variant="secondary" class="mb-3">Personal</Badge>
 		<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Mi Dashboard</h1>

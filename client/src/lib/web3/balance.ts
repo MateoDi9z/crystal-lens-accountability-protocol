@@ -16,7 +16,7 @@ export async function refreshSepoliaBalance(address?: Address) {
 
 	try {
 		await kit.updateNativeBalance(address, SEPOLIA_CHAIN_ID, "eip155");
-	} catch (error) {
-		console.warn("refreshSepoliaBalance:", error);
+	} catch {
+		// AppKit puede fallar si el modal no está listo; el balance on-chain sigue disponible
 	}
 }

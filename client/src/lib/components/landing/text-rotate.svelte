@@ -36,8 +36,9 @@
 	});
 </script>
 
-<span class="inline-block {className}">
+<span class="inline-block">
 	<motion.span
+		class={className}
 		animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
 		transition={{ duration: 0.3 }}
 	>

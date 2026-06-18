@@ -9,6 +9,7 @@ export const membershipAbi = parseAbi([
 	"function ownerOf(uint256 tokenId) view returns (address)",
 	"function getMemberTokenId(address member) view returns (uint256)",
 	"function getMemberData(uint256 tokenId) view returns (MemberData)",
+	"function tokenURI(uint256 tokenId) view returns (string)",
 
 	// Actions
 	"function mint(address to, (string dni, string fullName) memberData) external returns (uint256)",

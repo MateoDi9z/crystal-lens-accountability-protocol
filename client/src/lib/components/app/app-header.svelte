@@ -33,7 +33,7 @@
 	class="fixed top-0 right-0 left-0 z-50 border-b border-border/60 bg-background/75 shadow-sm backdrop-blur-xl dark:border-border dark:shadow-none"
 >
 	<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-		<a href={appPaths.discover} class="group flex items-center gap-2.5">
+		<a href="/" class="group flex items-center gap-2.5">
 			<motion.div
 				class="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg transition-colors group-hover:bg-primary/20"
 				whileHover={{ rotate: [0, -8, 8, 0], scale: 1.1 }}

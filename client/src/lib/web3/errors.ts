@@ -94,7 +94,6 @@ export function parseWalletError(error: unknown): string {
 	}
 
 	if (import.meta.env.DEV && message) {
-		console.error("Wallet error:", error);
 		return `Error al pagar: ${message.slice(0, 400)}`;
 	}
 

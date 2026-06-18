@@ -1,12 +1,8 @@
 <script lang="ts">
-	import { getAllOrgs } from "$lib/config/orgs";
-	import { appPaths } from "$lib/config/paths";
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
-	import { Button } from "$lib/components/ui/button/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
-	import { Building2, ArrowRight } from "@lucide/svelte";
+	import OrgDiscoverCard from "$lib/components/app/org-discover-card.svelte";
 
-	const orgs = getAllOrgs();
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -27,26 +23,12 @@
 		</p>
 	</div>
 
-	{#if orgs.length === 0}
+	{#if data.orgs.length === 0}
 		<p class="text-muted-foreground text-sm">No hay organizaciones configuradas todavía.</p>
 	{:else}
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each orgs as org (org.slug)}
-				<Card class="flex flex-col">
-					<CardHeader>
-						<CardTitle class="flex items-center gap-2 text-lg">
-							<Building2 class="text-primary size-5" />
-							{org.name}
-						</CardTitle>
-						<CardDescription class="line-clamp-3">{org.description}</CardDescription>
-					</CardHeader>
-					<CardContent class="mt-auto">
-						<Button href={appPaths.org(org.slug)} class="w-full gap-2">
-							Ver organización
-							<ArrowRight class="size-4" />
-						</Button>
-					</CardContent>
-				</Card>
+			{#each data.orgs as org (org.slug)}
+				<OrgDiscoverCard {org} />
 			{/each}
 		</div>
 	{/if}

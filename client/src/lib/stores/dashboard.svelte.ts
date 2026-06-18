@@ -105,8 +105,7 @@ export async function updateSepoliaEthBalance(address?: Address) {
 	try {
 		sepoliaEthBalanceState = await fetchSepoliaEthBalance(address);
 		void refreshSepoliaBalance(address);
-	} catch (error) {
-		console.warn("updateSepoliaEthBalance:", error);
+	} catch {
 		sepoliaEthBalanceState = null;
 	} finally {
 		sepoliaBalanceLoadingState = false;

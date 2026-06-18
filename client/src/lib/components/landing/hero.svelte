@@ -2,7 +2,6 @@
 	import { motion } from "motion-sv";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
-	import { MorphingText } from "$lib/components/magic/morphing-text/index.js";
 	import { ArrowRight, Sparkles, ChevronDown } from "@lucide/svelte";
 	import { appPaths } from "$lib/config/paths";
 	import { Iridescence } from "svelte-bits";
@@ -41,16 +40,16 @@
 		<h1 class="max-w-4xl text-balance text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
 			<span class="text-foreground">Governance That's</span>
 			<br />
-			<span class="text-gradient-brand">
-				<MorphingText
-					texts={[
-						"Transparent by Design",
-						"Secure by Default",
-						"Automated by Rule",
-						"Verifiable by Anyone"
-					]}
-				/>
-			</span>
+			<TextRotate
+				texts={[
+					"Transparent by Design",
+					"Secure by Default",
+					"Automated by Rule",
+					"Verifiable by Anyone"
+				]}
+				interval={3000}
+				class="text-gradient-brand"
+			/>
 		</h1>
 
 		<p class="text-muted-foreground mx-auto max-w-2xl text-balance text-lg leading-relaxed sm:text-xl">
