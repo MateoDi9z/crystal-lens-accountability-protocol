@@ -7,32 +7,19 @@ import {Treasury} from "../src/Treasury.sol";
 import {Governance} from "../src/Governance.sol";
 
 contract DeployScript is Script {
-
     function run() public {
         address owner = vm.envAddress("DEPLOY_ORG_OWNER");
 
         vm.startBroadcast();
 
         // === ORG 1 ===
-        deployOrg(
-            "Municipalidad de Campana", 
-            "CAMP", 
-            owner
-        );
+        deployOrg("Municipalidad de Campana", "CAMP", owner);
 
         // === ORG 2 ===
-        deployOrg(
-            "Club Ciudad de Campana", 
-            "CCC", 
-            owner
-        );
+        deployOrg("Club Ciudad de Campana", "CCC", owner);
 
         // === ORG 3 ===
-        deployOrg(
-            "Club Atletico Boca Juniors", 
-            "CABJ", 
-            owner
-        );
+        deployOrg("Club Atletico Boca Juniors", "CABJ", owner);
 
         vm.stopBroadcast();
     }
@@ -40,11 +27,7 @@ contract DeployScript is Script {
     /**
      * @dev Despliega una organización completa (Membership + Treasury + Governance)
      */
-    function deployOrg(
-        string memory name,
-        string memory symbol,
-        address owner
-    ) internal {
+    function deployOrg(string memory name, string memory symbol, address owner) internal {
         Membership membership = new Membership(name, symbol, owner);
         Treasury treasury = new Treasury(address(membership), owner);
         Governance governance = new Governance(address(treasury), owner);
