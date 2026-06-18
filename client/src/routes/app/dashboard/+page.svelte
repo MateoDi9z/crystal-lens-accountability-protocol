@@ -5,6 +5,7 @@
 	import PendingContributions from "$lib/components/app/pending-contributions.svelte";
 	import GovernanceSection from "$lib/components/app/governance-section.svelte";
 	import OwnerPanel from "$lib/components/app/owner-panel.svelte";
+	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { Loader2 } from "@lucide/svelte";
 	import {
@@ -50,13 +51,6 @@
 				<NetworkWarning />
 			</div>
 		{/if}
-		<div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4">
-			<div class="text-sm">
-				<p class="text-muted-foreground">Billetera conectada</p>
-				<p class="font-mono font-medium">{shortAddress(dashboard.address ?? "")}</p>
-			</div>
-			<appkit-account-button></appkit-account-button>
-		</div>
 
 		{#if dashboard.loadingAllOrgs}
 			<div class="text-muted-foreground flex items-center gap-2 py-12 text-sm">
@@ -64,16 +58,28 @@
 				Cargando tu información…
 			</div>
 		{:else}
-			<div class="space-y-6">
-				<PendingContributions />
-				<GovernanceSection />
-
-				{#if dashboard.ownedOrgsData.length > 0}
-					{#each dashboard.ownedOrgsData as owned (owned.org.slug)}
-						<OwnerPanel org={owned.org} members={owned.members} userAddress={dashboard.address!} />
-					{/each}
-				{/if}
-			</div>
+			{#if dashboard.ownedOrgsData.length > 0}
+				<Tabs.Root value="contributor" class="w-full">
+					<Tabs.List class="grid w-full grid-cols-2 mb-6">
+						<Tabs.Trigger value="contributor">Panel de Contribuidor</Tabs.Trigger>
+						<Tabs.Trigger value="owner">Administración (Dueño)</Tabs.Trigger>
+					</Tabs.List>
+					<Tabs.Content value="contributor" class="space-y-6 mt-0">
+						<PendingContributions />
+						<GovernanceSection />
+					</Tabs.Content>
+					<Tabs.Content value="owner" class="space-y-6 mt-0">
+						{#each dashboard.ownedOrgsData as owned (owned.org.slug)}
+							<OwnerPanel org={owned.org} members={owned.members} userAddress={dashboard.address!} />
+						{/each}
+					</Tabs.Content>
+				</Tabs.Root>
+			{:else}
+				<div class="space-y-6">
+					<PendingContributions />
+					<GovernanceSection />
+				</div>
+			{/if}
 		{/if}
 	{/if}
 </div>
