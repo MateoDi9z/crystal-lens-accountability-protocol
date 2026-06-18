@@ -3,7 +3,8 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { MorphingText } from "$lib/components/magic/morphing-text/index.js";
-	import { ArrowRight, LogIn, Sparkles, ChevronDown } from "@lucide/svelte";
+	import { ArrowRight, Sparkles, ChevronDown } from "@lucide/svelte";
+	import { appPaths } from "$lib/config/paths";
 	import { Iridescence } from "svelte-bits";
 	import ScrambleHover from "./scramble-hover.svelte";
 	import TextRotate from "./text-rotate.svelte";
@@ -86,15 +87,9 @@
 		class="flex flex-wrap items-center justify-center gap-4"
 	>
 		<motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-			<Button size="lg" href="/app" class="gap-2 px-6 text-base">
-				Explore the Protocol
+			<Button size="lg" href={appPaths.discover} class="gap-2 px-6 text-base">
+				Enter App
 				<ArrowRight class="size-4" />
-			</Button>
-		</motion.div>
-		<motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-			<Button size="lg" variant="outline" href="/app" class="gap-2 px-6 text-base">
-				<LogIn class="size-4" />
-				Sign In
 			</Button>
 		</motion.div>
 	</motion.div>

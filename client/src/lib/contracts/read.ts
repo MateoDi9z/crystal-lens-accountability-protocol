@@ -3,7 +3,10 @@ import { governanceAbi, treasuryAbi, membershipAbi } from "./abi";
 import { ProposalState } from "./types";
 import type { OrgConfig } from "$lib/config/orgs";
 import type { TreasuryOverview, UserStatus, Member, Proposal } from "./types";
-import { parseAbiItem, type Address } from "viem";
+import type { Address } from "viem";
+
+const MAX_MEMBER_TOKEN_SCAN = 256;
+const MAX_EMPTY_TOKEN_RUN = 32;
 
 export interface ResolvedOrgAddresses {
 	governance: Address;
@@ -18,14 +21,14 @@ export async function resolveOrgAddresses(org: OrgConfig): Promise<ResolvedOrgAd
 	const treasury = await publicClient.readContract({
 		address: governance,
 		abi: governanceAbi,
-		functionName: "treasury"
+		functionName: "getTreasury"
 	});
 
 	// Read membership address from treasury
 	const membership = await publicClient.readContract({
 		address: treasury,
 		abi: treasuryAbi,
-		functionName: "membership"
+		functionName: "getMembership"
 	});
 
 	return { governance, treasury, membership };
@@ -143,47 +146,36 @@ export async function getUserStatus(org: OrgConfig, address: Address): Promise<U
 	};
 }
 
-export async function getMembers(org: OrgConfig): Promise<Member[]> {
-	const { membership, treasury } = await resolveOrgAddresses(org);
+async function discoverActiveMemberTokens(
+	membership: Address
+): Promise<Array<{ address: Address; tokenId: bigint }>> {
+	const activeMembers: Array<{ address: Address; tokenId: bigint }> = [];
+	let emptyRun = 0;
 
-	const [addedLogs, removedLogs] = await Promise.all([
-		publicClient.getLogs({
-			address: membership,
-			event: parseAbiItem("event MemberAdded(address indexed member, uint256 indexed tokenId)"),
-			fromBlock: 0n
-		}),
-		publicClient.getLogs({
-			address: membership,
-			event: parseAbiItem("event MemberRemoved(address indexed member, uint256 indexed tokenId)"),
-			fromBlock: 0n
-		})
-	]);
+	for (let tokenId = 1n; tokenId <= BigInt(MAX_MEMBER_TOKEN_SCAN) && emptyRun < MAX_EMPTY_TOKEN_RUN; tokenId++) {
+		try {
+			const owner = await publicClient.readContract({
+				address: membership,
+				abi: membershipAbi,
+				functionName: "ownerOf",
+				args: [tokenId]
+			}) as Address;
 
-	const activeMembersMap = new Map<Address, bigint>();
-
-	const allLogs = [
-		...addedLogs.map((log) => ({ ...log, logType: "added" as const })),
-		...removedLogs.map((log) => ({ ...log, logType: "removed" as const }))
-	].sort((a, b) => {
-		if (a.blockNumber !== b.blockNumber) {
-			return Number(a.blockNumber - b.blockNumber);
-		}
-		return (a.logIndex ?? 0) - (b.logIndex ?? 0);
-	});
-
-	for (const log of allLogs) {
-		const member = log.args.member;
-		const tokenId = log.args.tokenId;
-		if (member && tokenId !== undefined) {
-			if (log.logType === "added") {
-				activeMembersMap.set(member, tokenId);
-			} else {
-				activeMembersMap.delete(member);
-			}
+			activeMembers.push({ address: owner, tokenId });
+			emptyRun = 0;
+		} catch {
+			emptyRun++;
 		}
 	}
 
-	const memberPromises = Array.from(activeMembersMap.entries()).map(async ([address, tokenId]) => {
+	return activeMembers;
+}
+
+export async function getMembers(org: OrgConfig): Promise<Member[]> {
+	const { membership, treasury } = await resolveOrgAddresses(org);
+	const activeMembers = await discoverActiveMemberTokens(membership);
+
+	const memberPromises = activeMembers.map(async ({ address, tokenId }) => {
 		const [data, isContributor, pendingContribution, totalPaid] = await Promise.all([
 			publicClient.readContract({
 				address: membership,
@@ -232,35 +224,34 @@ export async function getMembers(org: OrgConfig): Promise<Member[]> {
 export async function getProposals(org: OrgConfig): Promise<Proposal[]> {
 	const { governance } = await resolveOrgAddresses(org);
 
-	const logs = await publicClient.getLogs({
+	const count = await publicClient.readContract({
 		address: governance,
-		event: parseAbiItem("event ProposalCreated(uint256 indexed id, address indexed proposer, string description)"),
-		fromBlock: 0n
+		abi: governanceAbi,
+		functionName: "proposalCount"
 	});
 
-	const proposalIds = logs.map((log) => log.args.id).filter((id): id is bigint => id !== undefined);
+	if (count === 0n) return [];
 
-	const proposals = await Promise.all(
-		proposalIds.map(async (id) => {
-			const prop = await publicClient.readContract({
+	const rawProposals = await Promise.all(
+		Array.from({ length: Number(count) }, (_, index) =>
+			publicClient.readContract({
 				address: governance,
 				abi: governanceAbi,
 				functionName: "getProposal",
-				args: [id]
-			});
-			return {
-				id: prop.id,
-				proposer: prop.proposer,
-				description: prop.description,
-				amount: prop.amount,
-				forVotes: prop.forVotes,
-				againstVotes: prop.againstVotes,
-				state: prop.state as ProposalState
-			};
-		})
+				args: [BigInt(index)]
+			})
+		)
 	);
 
-	return proposals;
+	return rawProposals.map((prop) => ({
+		id: prop.id,
+		proposer: prop.proposer,
+		description: prop.description,
+		amount: prop.amount,
+		forVotes: prop.forVotes,
+		againstVotes: prop.againstVotes,
+		state: prop.state as ProposalState
+	}));
 }
 
 export async function isOwner(org: OrgConfig, address: Address): Promise<boolean> {

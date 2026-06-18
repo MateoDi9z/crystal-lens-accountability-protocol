@@ -12,11 +12,13 @@
 	let {
 		proposals,
 		user,
-		votes
+		votes,
+		readonly = false
 	}: {
 		proposals: Proposal[];
 		user?: UserStatus;
 		votes: Record<string, boolean>;
+		readonly?: boolean;
 	} = $props();
 
 	const dashboard = getDashboardState();
@@ -75,11 +77,22 @@
 					</div>
 					<p class="text-muted-foreground mb-3 text-sm leading-relaxed">{proposal.description}</p>
 					<div class="text-muted-foreground mb-4 flex flex-wrap gap-4 text-xs">
-						<span>Amount: <strong class="text-foreground">{formatEther(proposal.amount)} ETH</strong></span>
+						{#if proposal.state === ProposalState.Executed}
+							<span>
+								Funds released:
+								<strong class="text-foreground">{formatEther(proposal.amount)} ETH</strong>
+							</span>
+						{:else}
+							<span>
+								Amount:
+								<strong class="text-foreground">{formatEther(proposal.amount)} ETH</strong>
+							</span>
+						{/if}
 						<span>For: <strong class="text-foreground">{proposal.forVotes.toString()}</strong></span>
 						<span>Against: <strong class="text-foreground">{proposal.againstVotes.toString()}</strong></span>
 					</div>
 
+					{#if !readonly}
 					<div class="flex flex-wrap gap-2">
 						{#if canVote}
 							<Button
@@ -123,6 +136,7 @@
 							</Button>
 						{/if}
 					</div>
+					{/if}
 				</div>
 			{/each}
 		{/if}

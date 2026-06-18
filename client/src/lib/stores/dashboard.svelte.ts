@@ -1,19 +1,43 @@
 import { getAccount, watchAccount } from "@wagmi/core";
 import { wagmiConfig } from "$lib/web3/appkit";
 import { publicClient } from "$lib/web3/client";
+import { parseWalletError } from "$lib/web3/errors";
 import { getAllOrgs } from "$lib/config/orgs";
-import { getTreasuryOverview, getUserStatus, getMembers, getProposals, resolveOrgAddresses } from "$lib/contracts/read";
+import {
+	getTreasuryOverview,
+	getUserStatus,
+	getMembers,
+	getProposals,
+	resolveOrgAddresses
+} from "$lib/contracts/read";
+import { confirmTransaction, payPendingContribution } from "$lib/contracts/write";
 import { governanceAbi } from "$lib/contracts/abi";
 import type { OrgConfig } from "$lib/config/orgs";
 import type { TreasuryOverview, UserStatus, Member, Proposal } from "$lib/contracts/types";
 import type { Address } from "viem";
+
+export const SEPOLIA_CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || 11155111);
+
+export interface OrgUserData {
+	org: OrgConfig;
+	userStatus: UserStatus;
+	proposals: Proposal[];
+	votes: Record<string, boolean>;
+}
+
+export type PaymentPhase = "idle" | "wallet" | "processing" | "success" | "error";
+
+export interface PaymentFeedback {
+	phase: PaymentPhase;
+	message: string | null;
+}
 
 // Global module state for wallet connection
 let walletAddress = $state<Address | undefined>(undefined);
 let isConnectedState = $state<boolean>(false);
 let chainIdState = $state<number | undefined>(undefined);
 
-// Active organization state
+// Active organization state (legacy single-org views)
 let activeOrg = $state<OrgConfig>(getAllOrgs()[0]);
 
 export function getActiveOrg(): OrgConfig {
@@ -29,6 +53,37 @@ export function setActiveOrg(org: OrgConfig) {
 	}
 }
 
+async function fetchVoteStatus(
+	org: OrgConfig,
+	address: Address,
+	proposals: Proposal[]
+): Promise<Record<string, boolean>> {
+	if (proposals.length === 0) return {};
+
+	const { governance } = await resolveOrgAddresses(org);
+	const voteStatusMap: Record<string, boolean> = {};
+
+	await Promise.all(
+		proposals.map(async (proposal) => {
+			try {
+				const hasVoted = await publicClient.readContract({
+					address: governance,
+					abi: governanceAbi,
+					functionName: "voted",
+					args: [proposal.id, address]
+				});
+				if (hasVoted) {
+					voteStatusMap[proposal.id.toString()] = true;
+				}
+			} catch {
+				// Ignore individual vote lookup failures
+			}
+		})
+	);
+
+	return voteStatusMap;
+}
+
 // Watch account connection and update state
 if (typeof window !== "undefined") {
 	try {
@@ -37,7 +92,13 @@ if (typeof window !== "undefined") {
 				walletAddress = account.address;
 				isConnectedState = account.isConnected;
 				chainIdState = account.chainId;
-				refreshDashboard(account.address);
+				if (account.address) {
+					refreshAllOrgsDashboard(account.address);
+				} else {
+					dashboardState.allOrgsData = [];
+					dashboardState.userStatus = null;
+					dashboardState.votes = {};
+				}
 			}
 		});
 
@@ -51,37 +112,96 @@ if (typeof window !== "undefined") {
 }
 
 class DashboardState {
-	// Action Loading state key (e.g. "pay", "vote-1-true")
 	actionLoading = $state<string | null>(null);
+	loadingAllOrgs = $state(false);
 
-	// Wallet connection state
 	address = $derived(walletAddress);
 	isConnected = $derived(isConnectedState);
 	chainId = $derived(chainIdState);
+	isWrongNetwork = $derived(
+		this.isConnected && this.chainId !== undefined && this.chainId !== SEPOLIA_CHAIN_ID
+	);
 
-	// Loaded data
+	allOrgsData = $state<OrgUserData[]>([]);
+	paymentFeedback = $state<Record<string, PaymentFeedback>>({});
+
+	// Legacy single-org data
 	treasuryOverview = $state<TreasuryOverview | null>(null);
 	userStatus = $state<UserStatus | null>(null);
 	members = $state<Member[]>([]);
 	proposals = $state<Proposal[]>([]);
 	votes = $state<Record<string, boolean>>({});
 
-	// Derived status helpers
+	pendingOrgs = $derived(
+		this.allOrgsData.filter(
+			(entry) =>
+				entry.userStatus.isMember &&
+				entry.userStatus.pendingContribution > 0n &&
+				entry.userStatus.totalPaid < entry.userStatus.pendingContribution
+		)
+	);
+
+	hasPendingDebt = $derived(this.pendingOrgs.length > 0);
+
+	votableOrgs = $derived(
+		this.allOrgsData.filter((entry) => entry.userStatus.canVote)
+	);
+
 	isOwner = $derived(
 		this.userStatus && this.treasuryOverview
 			? this.userStatus.address.toLowerCase() === this.treasuryOverview.owner.toLowerCase()
 			: false
 	);
 
-	canVote = $derived(
-		this.userStatus ? this.userStatus.canVote : false
-	);
+	canVote = $derived(this.userStatus ? this.userStatus.canVote : false);
 }
 
 const dashboardState = new DashboardState();
 
 export function getDashboardState() {
 	return dashboardState;
+}
+
+export function getDebtRemaining(user: UserStatus): bigint {
+	return user.pendingContribution > user.totalPaid
+		? user.pendingContribution - user.totalPaid
+		: 0n;
+}
+
+export async function refreshAllOrgsDashboard(userAddr?: Address) {
+	const address = userAddr ?? walletAddress;
+	if (!address) {
+		dashboardState.allOrgsData = [];
+		return;
+	}
+
+	dashboardState.loadingAllOrgs = true;
+
+	try {
+		const orgs = getAllOrgs();
+		const results = await Promise.all(
+			orgs.map(async (org): Promise<OrgUserData | null> => {
+				try {
+					const userStatus = await getUserStatus(org, address);
+					if (!userStatus.isMember) return null;
+
+					const proposals = await getProposals(org).catch(() => []);
+					const votes = await fetchVoteStatus(org, address, proposals);
+
+					return { org, userStatus, proposals, votes };
+				} catch (error) {
+					console.error(`Error loading org ${org.slug}:`, error);
+					return null;
+				}
+			})
+		);
+
+		dashboardState.allOrgsData = results.filter((entry): entry is OrgUserData => entry !== null);
+	} catch (error) {
+		console.error("Error refreshing all orgs dashboard:", error);
+	} finally {
+		dashboardState.loadingAllOrgs = false;
+	}
 }
 
 export async function refreshDashboard(userAddr?: Address) {
@@ -98,27 +218,11 @@ export async function refreshDashboard(userAddr?: Address) {
 			dashboardState.userStatus = status;
 
 			if (dashboardState.proposals.length > 0) {
-				const { governance } = await resolveOrgAddresses(org);
-				const voteStatusMap: Record<string, boolean> = {};
-
-				await Promise.all(
-					dashboardState.proposals.map(async (p) => {
-						try {
-							const hasVoted = await publicClient.readContract({
-								address: governance,
-								abi: governanceAbi,
-								functionName: "voted",
-								args: [p.id, currentAddress]
-							});
-							if (hasVoted) {
-								voteStatusMap[p.id.toString()] = true;
-							}
-						} catch {
-							// Ignore log errors for individual proposals
-						}
-					})
+				dashboardState.votes = await fetchVoteStatus(
+					org,
+					currentAddress,
+					dashboardState.proposals
 				);
-				dashboardState.votes = voteStatusMap;
 			}
 		} else {
 			dashboardState.userStatus = null;
@@ -133,33 +237,52 @@ export async function refreshDashboard(userAddr?: Address) {
 		dashboardState.members = membersList;
 		dashboardState.proposals = proposalsList;
 
-		// Refetch votes map if proposals were loaded in parallel
-		if (currentAddress && Object.keys(dashboardState.votes).length === 0 && proposalsList.length > 0) {
-			const { governance } = await resolveOrgAddresses(org);
-			const voteStatusMap: Record<string, boolean> = {};
-
-			await Promise.all(
-				proposalsList.map(async (p) => {
-					try {
-						const hasVoted = await publicClient.readContract({
-							address: governance,
-							abi: governanceAbi,
-							functionName: "voted",
-							args: [p.id, currentAddress]
-						});
-						if (hasVoted) {
-							voteStatusMap[p.id.toString()] = true;
-						}
-					} catch {
-						// Ignore
-					}
-				})
-			);
-			dashboardState.votes = voteStatusMap;
+		if (currentAddress && proposalsList.length > 0) {
+			dashboardState.votes = await fetchVoteStatus(org, currentAddress, proposalsList);
 		}
 	} catch (error) {
 		console.error("Error refreshing dashboard data:", error);
 	}
+}
+
+function setPaymentFeedback(slug: string, feedback: PaymentFeedback) {
+	dashboardState.paymentFeedback = {
+		...dashboardState.paymentFeedback,
+		[slug]: feedback
+	};
+}
+
+export async function runPayment(org: OrgConfig, amount: bigint) {
+	const slug = org.slug;
+	const address = walletAddress;
+	if (!address) return;
+
+	setPaymentFeedback(slug, { phase: "wallet", message: "Confirmá el pago en tu billetera…" });
+	dashboardState.actionLoading = `pay-${slug}`;
+
+	try {
+		const hash = await payPendingContribution(amount, org);
+		setPaymentFeedback(slug, { phase: "processing", message: "Procesando tu pago…" });
+		await confirmTransaction(hash);
+		await refreshAllOrgsDashboard(address);
+		setPaymentFeedback(slug, {
+			phase: "success",
+			message: "¡Listo! Tu contribución fue registrada. Ahora estás al día."
+		});
+	} catch (error) {
+		setPaymentFeedback(slug, {
+			phase: "error",
+			message: parseWalletError(error)
+		});
+	} finally {
+		dashboardState.actionLoading = null;
+	}
+}
+
+export function clearPaymentFeedback(slug: string) {
+	const next = { ...dashboardState.paymentFeedback };
+	delete next[slug];
+	dashboardState.paymentFeedback = next;
 }
 
 export async function runAction(
@@ -173,9 +296,9 @@ export async function runAction(
 		if (successCallback) {
 			await successCallback();
 		}
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error(`Error running action ${key}:`, error);
-		alert(error?.message || "Transaction failed");
+		alert(parseWalletError(error));
 	} finally {
 		dashboardState.actionLoading = null;
 	}
