@@ -86,13 +86,13 @@
 		class="flex flex-wrap items-center justify-center gap-4"
 	>
 		<motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-			<Button size="lg" href="/app" class="gap-2 px-6 text-base">
+			<Button size="lg" href="/dashboard" class="gap-2 px-6 text-base">
 				Explore the Protocol
 				<ArrowRight class="size-4" />
 			</Button>
 		</motion.div>
 		<motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-			<Button size="lg" variant="outline" href="/app" class="gap-2 px-6 text-base">
+			<Button size="lg" variant="outline" href="/dashboard" class="gap-2 px-6 text-base">
 				<LogIn class="size-4" />
 				Sign In
 			</Button>

@@ -4,7 +4,7 @@ export const membershipAbi = parseAbi([
 	"struct MemberData { string dni; string fullName; }",
 
 	// Getters
-	"function treasury() view returns (address)",
+	"function getTreasury() view returns (address)",
 	"function isMember(address user) view returns (bool)",
 	"function getMemberTokenId(address member) view returns (uint256)",
 	"function getMemberData(uint256 tokenId) view returns (MemberData)",

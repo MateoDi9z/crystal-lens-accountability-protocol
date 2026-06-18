@@ -68,13 +68,13 @@
 			viewport={{ once: true }}
 		>
 			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-				<Button size="lg" href="/app" class="gap-2 px-8 text-base">
+				<Button size="lg" href="/dashboard" class="gap-2 px-8 text-base">
 					Get Started
 					<ArrowRight class="size-4" />
 				</Button>
 			</motion.div>
 			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-				<Button size="lg" variant="outline" href="/app" class="gap-2 px-8 text-base">
+				<Button size="lg" variant="outline" href="/dashboard" class="gap-2 px-8 text-base">
 					<LogIn class="size-4" />
 					Sign In
 				</Button>

@@ -5,10 +5,11 @@
 	import ModeToggle from "./mode-toggle.svelte";
 
 	const links = [
-		{ label: "About", href: "#about" },
-		{ label: "How it Works", href: "#how-it-works" },
-		{ label: "Architecture", href: "#architecture" },
-		{ label: "Features", href: "#features" }
+		{ label: "Discover", href: "/discover" },
+		{ label: "About", href: "/#about" },
+		{ label: "How it Works", href: "/#how-it-works" },
+		{ label: "Architecture", href: "/#architecture" },
+		{ label: "Features", href: "/#features" }
 	];
 
 	let scrolled = $state(false);
@@ -54,11 +55,11 @@
 		<div class="flex items-center gap-2">
 			<ModeToggle />
 			<div class="bg-border mx-1 hidden h-5 w-px sm:block"></div>
-			<Button variant="ghost" size="sm" href="/app" class="hidden sm:inline-flex gap-1.5">
+			<Button variant="ghost" size="sm" href="/dashboard" class="hidden sm:inline-flex gap-1.5">
 				<LogIn class="size-3.5" />
 				Sign In
 			</Button>
-			<Button size="sm" href="/app" class="gap-1.5">
+			<Button size="sm" href="/dashboard" class="gap-1.5">
 				Get Started
 				<ArrowRight class="size-3.5" />
 			</Button>
