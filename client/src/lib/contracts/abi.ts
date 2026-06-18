@@ -6,6 +6,7 @@ export const membershipAbi = parseAbi([
 	// Getters
 	"function treasury() view returns (address)",
 	"function isMember(address user) view returns (bool)",
+	"function ownerOf(uint256 tokenId) view returns (address)",
 	"function getMemberTokenId(address member) view returns (uint256)",
 	"function getMemberData(uint256 tokenId) view returns (MemberData)",
 
@@ -21,7 +22,7 @@ export const membershipAbi = parseAbi([
 
 export const treasuryAbi = parseAbi([
 	// Getters
-	"function membership() view returns (address)",
+	"function getMembership() view returns (address)",
 	"function governance() view returns (address)",
 	"function owner() view returns (address)",
 	"function totalFunds() view returns (uint256)",
@@ -48,7 +49,7 @@ export const governanceAbi = parseAbi([
 	"struct Proposal { uint256 id; address proposer; string description; uint256 amount; uint256 forVotes; uint256 againstVotes; uint8 state; }",
 
 	// Getters
-	"function treasury() view returns (address)",
+	"function getTreasury() view returns (address)",
 	"function owner() view returns (address)",
 	"function proposals(uint256 id) view returns (uint256 id, address proposer, string description, uint256 amount, uint256 forVotes, uint256 againstVotes, uint8 state)",
 	"function voted(uint256 proposalId, address voter) view returns (bool)",

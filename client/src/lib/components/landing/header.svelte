@@ -4,11 +4,14 @@
 	import { Gem, LogIn, ArrowRight } from "@lucide/svelte";
 	import ModeToggle from "./mode-toggle.svelte";
 
+	let { solid = false }: { solid?: boolean } = $props();
+
 	const links = [
-		{ label: "About", href: "#about" },
-		{ label: "How it Works", href: "#how-it-works" },
-		{ label: "Architecture", href: "#architecture" },
-		{ label: "Features", href: "#features" }
+		{ label: "Discover", href: "/discover" },
+		{ label: "About", href: "/#about" },
+		{ label: "How it Works", href: "/#how-it-works" },
+		{ label: "Architecture", href: "/#architecture" },
+		{ label: "Features", href: "/#features" }
 	];
 
 	let scrolled = $state(false);
@@ -16,12 +19,14 @@
 	function onScroll() {
 		scrolled = window.scrollY > 20;
 	}
+
+	const isSolid = $derived(solid || scrolled);
 </script>
 
 <svelte:window onscroll={onScroll} />
 
 <header
-	class={scrolled
+	class={isSolid
 		? "fixed top-0 right-0 left-0 z-50 border-b border-border/60 bg-background/75 shadow-sm backdrop-blur-xl transition-all duration-300 dark:border-border dark:shadow-none"
 		: "fixed top-0 right-0 left-0 z-50 border-transparent bg-transparent transition-all duration-300"}
 >
@@ -54,11 +59,11 @@
 		<div class="flex items-center gap-2">
 			<ModeToggle />
 			<div class="bg-border mx-1 hidden h-5 w-px sm:block"></div>
-			<Button variant="ghost" size="sm" href="/app" class="hidden sm:inline-flex gap-1.5">
+			<Button variant="ghost" size="sm" href="/dashboard" class="hidden sm:inline-flex gap-1.5">
 				<LogIn class="size-3.5" />
 				Sign In
 			</Button>
-			<Button size="sm" href="/app" class="gap-1.5">
+			<Button size="sm" href="/dashboard" class="gap-1.5">
 				Get Started
 				<ArrowRight class="size-3.5" />
 			</Button>
