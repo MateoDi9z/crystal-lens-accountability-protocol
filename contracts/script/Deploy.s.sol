@@ -7,39 +7,60 @@ import {Treasury} from "../src/Treasury.sol";
 import {Governance} from "../src/Governance.sol";
 
 contract DeployScript is Script {
-    address constant OWNER = 0x26583527B405434313EC0A88F629Fb99B42E1e6D;
 
     function run() public {
-        address alice = vm.addr(0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78627d);
-        address bob = vm.addr(0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804af9d1950);
+        address owner = vm.envAddress("DEPLOY_ORG_OWNER");
 
-        vm.startBroadcast(OWNER);
+        vm.startBroadcast();
 
-        Membership membership = new Membership("Crystal Lens Membership", "CLM", OWNER);
-        Treasury treasury = new Treasury(address(membership), OWNER);
-        Governance governance = new Governance(address(treasury), OWNER);
+        // === ORG 1 ===
+        deployOrg(
+            "Municipalidad de Campana", 
+            "CAMP", 
+            owner
+        );
 
+        // === ORG 2 ===
+        deployOrg(
+            "Club Ciudad de Campana", 
+            "CCC", 
+            owner
+        );
+
+        // === ORG 3 ===
+        deployOrg(
+            "Club Atletico Boca Juniors", 
+            "CABJ", 
+            owner
+        );
+
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @dev Despliega una organización completa (Membership + Treasury + Governance)
+     */
+    function deployOrg(
+        string memory name,
+        string memory symbol,
+        address owner
+    ) internal {
+        Membership membership = new Membership(name, symbol, owner);
+        Treasury treasury = new Treasury(address(membership), owner);
+        Governance governance = new Governance(address(treasury), owner);
+
+        // Configurar conexiones cruzadas
         membership.setTreasury(address(treasury));
         treasury.setGovernance(address(governance));
 
-        membership.mint(alice, MemberData({dni: "30123456", fullName: "Alice Cooper"}));
-        membership.mint(bob, MemberData({dni: "28987654", fullName: "Bob Martinez"}));
-
-        treasury.requestContribution(alice, 1 ether);
-        treasury.requestContribution(bob, 1 ether);
-
-        governance.createProposal("Fund community event supplies", 0.5 ether);
-
-        (bool success,) = address(treasury).call{value: 2 ether}("");
-        require(success, "Treasury deposit failed");
-
-        vm.stopBroadcast();
-
-        console2.log("OWNER", OWNER);
-        console2.log("ALICE", alice);
-        console2.log("BOB", bob);
-        console2.log("MEMBERSHIP", address(membership));
-        console2.log("TREASURY", address(treasury));
-        console2.log("GOVERNANCE", address(governance));
+        // Logs
+        console2.log("====================================");
+        console2.log(string.concat("# ", name));
+        console2.log("Symbol:", symbol);
+        console2.log("Owner:", owner);
+        console2.log("- MEMBERSHIP  ->", address(membership));
+        console2.log("- TREASURY    ->", address(treasury));
+        console2.log("- GOVERNANCE  ->", address(governance));
+        console2.log("====================================\n");
     }
 }

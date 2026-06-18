@@ -104,6 +104,10 @@ contract Governance is Ownable {
         return _nextProposalId;
     }
 
+    function getTreasury() external view returns (address) {
+        return address(treasury);
+    }
+
     // =====================================================
     // VOTING
     // =====================================================

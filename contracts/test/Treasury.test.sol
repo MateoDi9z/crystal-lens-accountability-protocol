@@ -64,6 +64,10 @@ contract TreasuryTest is Test {
     // DEPLOYMENT & SETTINGS
     // ==========================================
 
+    function testMembershipIsCorrect() public view {
+        assertEq(treasury.getMembership(), address(membership));
+    }
+
     function testDeployment() public view {
         assertEq(address(treasury.membership()), address(membership));
         assertEq(treasury.owner(), owner);
