@@ -71,6 +71,10 @@ contract GovernanceTest is Test {
         assertEq(governance.owner(), owner);
     }
 
+    function testTreasuryIsCorrect() public view {
+        assertEq(governance.getTreasury(), address(treasury));
+    }
+
     // =====================================================
     // CREATE PROPOSAL
     // =====================================================
