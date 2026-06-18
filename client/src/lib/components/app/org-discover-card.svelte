@@ -3,16 +3,16 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Building2, ArrowRight } from "@lucide/svelte";
 	import { appPaths } from "$lib/config/paths";
-	import type { DiscoverOrg } from "$lib/contracts/nft";
+	import type { OrgConfig } from "$lib/config/orgs";
 
-	let { org }: { org: DiscoverOrg } = $props();
+	let { org }: { org: OrgConfig } = $props();
 </script>
 
 <Card class="flex flex-col overflow-hidden pt-0">
 	<div class="bg-muted relative aspect-[4/3] w-full overflow-hidden">
-		{#if org.nftImageUrl}
+		{#if org.nftImage}
 			<img
-				src={org.nftImageUrl}
+				src={org.nftImage}
 				alt="NFT de membresía de {org.name}"
 				class="size-full object-cover"
 				loading="lazy"

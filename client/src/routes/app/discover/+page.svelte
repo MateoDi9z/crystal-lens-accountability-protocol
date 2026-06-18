@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import OrgDiscoverCard from "$lib/components/app/org-discover-card.svelte";
+	import { getAllOrgs } from "$lib/config/orgs";
 
-	let { data } = $props();
+	const orgs = getAllOrgs();
 </script>
 
 <svelte:head>
@@ -23,11 +24,11 @@
 		</p>
 	</div>
 
-	{#if data.orgs.length === 0}
+	{#if orgs.length === 0}
 		<p class="text-muted-foreground text-sm">No hay organizaciones configuradas todavía.</p>
 	{:else}
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each data.orgs as org (org.slug)}
+			{#each orgs as org (org.slug)}
 				<OrgDiscoverCard {org} />
 			{/each}
 		</div>

@@ -6,78 +6,90 @@
 	import TreasuryCard from "$lib/components/app/treasury-card.svelte";
 	import MembersList from "$lib/components/app/members-list.svelte";
 	import ProposalsList from "$lib/components/app/proposals-list.svelte";
+	import OrgSectionSkeleton from "$lib/components/app/org-section-skeleton.svelte";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
-	import { Loader2, ArrowLeft, AlertCircle } from "@lucide/svelte";
+	import { ArrowLeft, AlertCircle } from "@lucide/svelte";
 	import type { TreasuryOverview, Member, Proposal } from "$lib/contracts/types";
 
 	const slug = $derived(page.params.slug ?? "");
 	const org = $derived(slug ? getOrg(slug) : undefined);
 
-	let loading = $state(true);
-	let loadError = $state<string | null>(null);
 	let treasury = $state<TreasuryOverview | null>(null);
 	let members = $state<Member[]>([]);
 	let proposals = $state<Proposal[]>([]);
+	let treasuryLoading = $state(false);
+	let membersLoading = $state(false);
+	let proposalsLoading = $state(false);
+	let treasuryError = $state<string | null>(null);
+	let membersError = $state<string | null>(null);
+	let proposalsError = $state<string | null>(null);
 
 	$effect(() => {
 		const currentOrg = org;
 		if (!currentOrg) {
-			loading = false;
-			loadError = "Organización no encontrada.";
 			treasury = null;
 			members = [];
 			proposals = [];
+			treasuryLoading = false;
+			membersLoading = false;
+			proposalsLoading = false;
+			treasuryError = null;
+			membersError = null;
+			proposalsError = null;
 			return;
 		}
 
 		let cancelled = false;
-		loading = true;
-		loadError = null;
+		treasury = null;
+		members = [];
+		proposals = [];
+		treasuryLoading = true;
+		membersLoading = true;
+		proposalsLoading = true;
+		treasuryError = null;
+		membersError = null;
+		proposalsError = null;
 
-		Promise.allSettled([
-			getTreasuryOverview(currentOrg),
-			getMembers(currentOrg),
-			getProposals(currentOrg)
-		])
-			.then((results) => {
-				if (cancelled) return;
-
-				const errors: string[] = [];
-
-				if (results[0].status === "fulfilled") {
-					treasury = results[0].value;
-				} else {
-					console.error("Error loading treasury:", results[0].reason);
-					errors.push("tesorería");
-				}
-
-				if (results[1].status === "fulfilled") {
-					members = results[1].value;
-				} else {
-					console.error("Error loading members:", results[1].reason);
-					errors.push("miembros");
-				}
-
-				if (results[2].status === "fulfilled") {
-					proposals = results[2].value;
-				} else {
-					console.error("Error loading proposals:", results[2].reason);
-					errors.push("propuestas");
-				}
-
-				if (!treasury && errors.length > 0) {
-					const firstError = results.find((result) => result.status === "rejected");
-					loadError =
-						firstError?.status === "rejected" && firstError.reason instanceof Error
-							? firstError.reason.message
-							: `No se pudo cargar: ${errors.join(", ")}.`;
-				} else if (errors.length > 0) {
-					loadError = `Algunos datos no se pudieron cargar: ${errors.join(", ")}.`;
+		getTreasuryOverview(currentOrg)
+			.then((value) => {
+				if (!cancelled) treasury = value;
+			})
+			.catch((error) => {
+				if (!cancelled) {
+					treasuryError =
+						error instanceof Error ? error.message : "No se pudo cargar la tesorería.";
 				}
 			})
 			.finally(() => {
-				if (!cancelled) loading = false;
+				if (!cancelled) treasuryLoading = false;
+			});
+
+		getMembers(currentOrg)
+			.then((value) => {
+				if (!cancelled) members = value;
+			})
+			.catch((error) => {
+				if (!cancelled) {
+					membersError = error instanceof Error ? error.message : "No se pudieron cargar los miembros.";
+				}
+			})
+			.finally(() => {
+				if (!cancelled) membersLoading = false;
+			});
+
+		getProposals(currentOrg)
+			.then((value) => {
+				if (!cancelled) proposals = value;
+			})
+			.catch((error) => {
+				if (!cancelled) {
+					proposalsError =
+						error instanceof Error ? error.message : "No se pudieron cargar las propuestas.";
+				}
+			})
+			.finally(() => {
+				if (!cancelled) proposalsLoading = false;
 			});
 
 		return () => {
@@ -119,33 +131,39 @@
 			</p>
 		</div>
 
-		{#if loading}
-			<div class="text-muted-foreground flex items-center gap-2 py-16 text-sm">
-				<Loader2 class="size-4 animate-spin" />
-				Cargando datos on-chain…
-			</div>
-		{:else if loadError && !treasury}
-			<div class="border-destructive/30 bg-destructive/5 flex items-start gap-3 rounded-xl border p-4">
-				<AlertCircle class="text-destructive mt-0.5 size-5 shrink-0" />
-				<div>
-					<p class="font-medium">Error al cargar</p>
-					<p class="text-muted-foreground mt-1 text-sm">{loadError}</p>
+		<div class="space-y-6">
+			{#if treasuryLoading}
+				<OrgSectionSkeleton variant="treasury" />
+			{:else if treasuryError}
+				<div class="border-destructive/30 bg-destructive/5 flex items-start gap-3 rounded-xl border p-4">
+					<AlertCircle class="text-destructive mt-0.5 size-5 shrink-0" />
+					<p class="text-muted-foreground text-sm">{treasuryError}</p>
 				</div>
-			</div>
-		{:else}
-			{#if loadError}
-				<div class="border-amber-500/30 bg-amber-500/5 mb-6 flex items-start gap-3 rounded-xl border p-4">
-					<AlertCircle class="mt-0.5 size-5 shrink-0 text-amber-600" />
-					<p class="text-muted-foreground text-sm">{loadError}</p>
-				</div>
+			{:else if treasury}
+				<TreasuryCard {treasury} />
 			{/if}
-			<div class="space-y-6">
-				{#if treasury}
-					<TreasuryCard {treasury} />
-				{/if}
+
+			{#if membersLoading}
+				<OrgSectionSkeleton variant="members" />
+			{:else if membersError}
+				<div class="border-amber-500/30 bg-amber-500/5 flex items-start gap-3 rounded-xl border p-4">
+					<AlertCircle class="mt-0.5 size-5 shrink-0 text-amber-600" />
+					<p class="text-muted-foreground text-sm">{membersError}</p>
+				</div>
+			{:else}
 				<MembersList {members} />
+			{/if}
+
+			{#if proposalsLoading}
+				<OrgSectionSkeleton variant="proposals" />
+			{:else if proposalsError}
+				<div class="border-amber-500/30 bg-amber-500/5 flex items-start gap-3 rounded-xl border p-4">
+					<AlertCircle class="mt-0.5 size-5 shrink-0 text-amber-600" />
+					<p class="text-muted-foreground text-sm">{proposalsError}</p>
+				</div>
+			{:else}
 				<ProposalsList {proposals} votes={{}} readonly />
-			</div>
-		{/if}
+			{/if}
+		</div>
 	{/if}
 </div>

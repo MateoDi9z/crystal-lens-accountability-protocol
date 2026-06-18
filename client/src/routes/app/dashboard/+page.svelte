@@ -7,7 +7,7 @@
 	import OwnerPanel from "$lib/components/app/owner-panel.svelte";
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
-	import { Loader2 } from "@lucide/svelte";
+	import DashboardSkeleton from "$lib/components/app/dashboard-skeleton.svelte";
 	import {
 		getDashboardState,
 		refreshAllOrgsDashboard
@@ -53,10 +53,7 @@
 		{/if}
 
 		{#if dashboard.loadingAllOrgs}
-			<div class="text-muted-foreground flex items-center gap-2 py-12 text-sm">
-				<Loader2 class="size-4 animate-spin" />
-				Cargando tu información…
-			</div>
+			<DashboardSkeleton />
 		{:else}
 			{#if dashboard.ownedOrgsData.length > 0}
 				<Tabs.Root value="contributor" class="w-full">
