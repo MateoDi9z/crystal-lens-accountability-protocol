@@ -4,6 +4,7 @@
 	import NetworkWarning from "$lib/components/app/network-warning.svelte";
 	import PendingContributions from "$lib/components/app/pending-contributions.svelte";
 	import GovernanceSection from "$lib/components/app/governance-section.svelte";
+	import OwnerPanel from "$lib/components/app/owner-panel.svelte";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { Loader2 } from "@lucide/svelte";
 	import {
@@ -63,6 +64,12 @@
 			<div class="space-y-6">
 				<PendingContributions />
 				<GovernanceSection />
+
+				{#if dashboard.ownedOrgsData.length > 0}
+					{#each dashboard.ownedOrgsData as owned (owned.org.slug)}
+						<OwnerPanel org={owned.org} members={owned.members} userAddress={dashboard.address!} />
+					{/each}
+				{/if}
 			</div>
 		{/if}
 	{/if}

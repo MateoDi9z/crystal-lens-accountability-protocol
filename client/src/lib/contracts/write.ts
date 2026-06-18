@@ -33,10 +33,9 @@ export async function confirmTransaction(hash: `0x${string}`) {
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
-export async function registerContributor(to: Address, dni: string, fullName: string, amount: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { membership, treasury } = await resolveOrgAddresses(org);
+export async function registerContributor(to: Address, dni: string, fullName: string, amount: bigint, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { membership, treasury } = await resolveOrgAddresses(activeOrg);
 
 	const walletClient = await getActiveWalletClient();
 	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
@@ -63,10 +62,9 @@ export async function registerContributor(to: Address, dni: string, fullName: st
 	return publicClient.waitForTransactionReceipt({ hash: debtHash });
 }
 
-export async function requestContribution(contributor: Address, amount: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { treasury } = await resolveOrgAddresses(org);
+export async function requestContribution(contributor: Address, amount: bigint, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { treasury } = await resolveOrgAddresses(activeOrg);
 
 	const walletClient = await getActiveWalletClient();
 	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
@@ -82,10 +80,9 @@ export async function requestContribution(contributor: Address, amount: bigint) 
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
-export async function createProposal(description: string, amount: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { governance } = await resolveOrgAddresses(org);
+export async function createProposal(description: string, amount: bigint, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { governance } = await resolveOrgAddresses(activeOrg);
 
 	const walletClient = await getActiveWalletClient();
 	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");
@@ -119,10 +116,9 @@ export async function voteOnProposal(id: bigint, support: boolean, org?: OrgConf
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
-export async function executeProposal(id: bigint) {
-	const org = getActiveOrg();
-	if (!org) throw new Error("No active organization");
-	const { governance } = await resolveOrgAddresses(org);
+export async function executeProposal(id: bigint, org?: OrgConfig) {
+	const activeOrg = resolveOrg(org);
+	const { governance } = await resolveOrgAddresses(activeOrg);
 
 	const walletClient = await getActiveWalletClient();
 	if (!walletClient) throw new Error("Conectá tu billetera para continuar.");

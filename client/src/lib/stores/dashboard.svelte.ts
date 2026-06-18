@@ -32,6 +32,11 @@ export interface PaymentFeedback {
 	message: string | null;
 }
 
+export interface OwnedOrgData {
+	org: OrgConfig;
+	members: Member[];
+}
+
 // Global module state for wallet connection
 let walletAddress = $state<Address | undefined>(undefined);
 let isConnectedState = $state<boolean>(false);
@@ -96,6 +101,7 @@ if (typeof window !== "undefined") {
 					refreshAllOrgsDashboard(account.address);
 				} else {
 					dashboardState.allOrgsData = [];
+					dashboardState.ownedOrgsData = [];
 					dashboardState.userStatus = null;
 					dashboardState.votes = {};
 				}
@@ -123,6 +129,7 @@ class DashboardState {
 	);
 
 	allOrgsData = $state<OrgUserData[]>([]);
+	ownedOrgsData = $state<OwnedOrgData[]>([]);
 	paymentFeedback = $state<Record<string, PaymentFeedback>>({});
 
 	// Legacy single-org data
@@ -172,6 +179,7 @@ export async function refreshAllOrgsDashboard(userAddr?: Address) {
 	const address = userAddr ?? walletAddress;
 	if (!address) {
 		dashboardState.allOrgsData = [];
+		dashboardState.ownedOrgsData = [];
 		return;
 	}
 
@@ -197,6 +205,26 @@ export async function refreshAllOrgsDashboard(userAddr?: Address) {
 		);
 
 		dashboardState.allOrgsData = results.filter((entry): entry is OrgUserData => entry !== null);
+
+		const ownerResults = await Promise.all(
+			orgs.map(async (org): Promise<OwnedOrgData | null> => {
+				try {
+					const { governance } = await resolveOrgAddresses(org);
+					const owner = await publicClient.readContract({
+						address: governance,
+						abi: governanceAbi,
+						functionName: "owner"
+					});
+					if (owner.toLowerCase() !== address.toLowerCase()) return null;
+
+					const members = await getMembers(org).catch(() => []);
+					return { org, members };
+				} catch {
+					return null;
+				}
+			})
+		);
+		dashboardState.ownedOrgsData = ownerResults.filter((entry): entry is OwnedOrgData => entry !== null);
 	} catch (error) {
 		console.error("Error refreshing all orgs dashboard:", error);
 	} finally {

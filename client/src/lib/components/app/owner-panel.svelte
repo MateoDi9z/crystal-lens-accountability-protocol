@@ -11,9 +11,9 @@
 		createProposal
 	} from "$lib/contracts/write";
 	import { refreshDashboard, runAction, getDashboardState } from "$lib/stores/dashboard.svelte";
-	import { OWNER_ADDRESS } from "$lib/config/owner";
+	import type { OrgConfig } from "$lib/config/orgs";
 
-	let { members, userAddress }: { members: Member[]; userAddress: Address } = $props();
+	let { org, members, userAddress }: { org: OrgConfig; members: Member[]; userAddress: Address } = $props();
 
 	const dashboard = getDashboardState();
 
@@ -60,8 +60,8 @@
 		}
 
 		await runAction(
-			"register-contributor",
-			() => registerContributor(to, dni.trim(), fullName.trim(), amount),
+			`register-contributor-${org.slug}`,
+			() => registerContributor(to, dni.trim(), fullName.trim(), amount, org),
 			() => refreshDashboard(userAddress)
 		);
 
@@ -92,8 +92,8 @@
 		}
 
 		await runAction(
-			"request-debt",
-			() => requestContribution(contributor, amount),
+			`request-debt-${org.slug}`,
+			() => requestContribution(contributor, amount, org),
 			() => refreshDashboard(userAddress)
 		);
 
@@ -121,8 +121,8 @@
 		}
 
 		await runAction(
-			"create-proposal",
-			() => createProposal(proposalDescription.trim(), amount),
+			`create-proposal-${org.slug}`,
+			() => createProposal(proposalDescription.trim(), amount, org),
 			() => refreshDashboard(userAddress)
 		);
 
@@ -141,10 +141,10 @@
 	<CardHeader>
 		<CardTitle class="flex items-center gap-2 text-lg">
 			<Crown class="text-primary size-5" />
-			Owner Panel
+			Owner Panel: {org.name}
 		</CardTitle>
 		<CardDescription>
-			Connected as owner <span class="font-mono">{OWNER_ADDRESS.slice(0, 6)}…{OWNER_ADDRESS.slice(-4)}</span>
+			Connected as owner <span class="font-mono">{userAddress.slice(0, 6)}…{userAddress.slice(-4)}</span>
 		</CardDescription>
 	</CardHeader>
 	<CardContent class="grid gap-8">
@@ -186,10 +186,10 @@
 					/>
 					<Button
 						class="w-full gap-2"
-						disabled={dashboard.actionLoading === "register-contributor"}
+						disabled={dashboard.actionLoading === `register-contributor-${org.slug}`}
 						onclick={handleRegister}
 					>
-						{#if dashboard.actionLoading === "register-contributor"}
+						{#if dashboard.actionLoading === `register-contributor-${org.slug}`}
 							<Loader2 class="size-4 animate-spin" />
 						{/if}
 						Register contributor
@@ -219,10 +219,10 @@
 					<Button
 						variant="outline"
 						class="w-full gap-2"
-						disabled={dashboard.actionLoading === "request-debt"}
+						disabled={dashboard.actionLoading === `request-debt-${org.slug}`}
 						onclick={handleRequestDebt}
 					>
-						{#if dashboard.actionLoading === "request-debt"}
+						{#if dashboard.actionLoading === `request-debt-${org.slug}`}
 							<Loader2 class="size-4 animate-spin" />
 						{/if}
 						Request contribution
@@ -248,10 +248,10 @@
 					bind:value={proposalAmountEth}
 				/>
 				<Button
-					disabled={dashboard.actionLoading === "create-proposal"}
+					disabled={dashboard.actionLoading === `create-proposal-${org.slug}`}
 					onclick={handleCreateProposal}
 				>
-					{#if dashboard.actionLoading === "create-proposal"}
+					{#if dashboard.actionLoading === `create-proposal-${org.slug}`}
 						<Loader2 class="size-4 animate-spin" />
 					{/if}
 					Create
