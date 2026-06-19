@@ -6,6 +6,7 @@
 	import TreasuryCard from "$lib/components/app/treasury-card.svelte";
 	import MembersList from "$lib/components/app/members-list.svelte";
 	import ProposalsList from "$lib/components/app/proposals-list.svelte";
+	import OrgContractsInfo from "$lib/components/app/org-contracts-info.svelte";
 	import OrgSectionSkeleton from "$lib/components/app/org-section-skeleton.svelte";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
@@ -125,7 +126,10 @@
 	{:else}
 		<div class="mb-8">
 			<Badge variant="secondary" class="mb-3">Vista pública</Badge>
-			<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{org.name}</h1>
+			<div class="flex items-center gap-2">
+				<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{org.name}</h1>
+				<OrgContractsInfo {org} />
+			</div>
 			<p class="text-muted-foreground mt-2 max-w-3xl text-sm leading-relaxed sm:text-base">
 				{org.description}
 			</p>

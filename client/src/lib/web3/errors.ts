@@ -82,6 +82,15 @@ export function parseWalletError(error: unknown): string {
 	if (lower.includes("amount is not the same") || lower.includes("pending contribution")) {
 		return "El monto no coincide con tu contribución pendiente. Recargá la página e intentá de nuevo.";
 	}
+	if (lower.includes("proposal is not approved")) {
+		return "Esta propuesta ya no está aprobada. Actualizá la página para ver su estado actual.";
+	}
+	if (lower.includes("insufficient active funds")) {
+		return "La tesorería no tiene fondos suficientes. Verificá que los miembros hayan aportado.";
+	}
+	if (lower.includes("proposal does not exist")) {
+		return "No encontramos esta propuesta. Actualizá la página e intentá de nuevo.";
+	}
 	if (lower.includes("execution reverted") || lower.includes("revert")) {
 		const revertMatch = message.match(/reason:\s*([^|]+)/i);
 		if (revertMatch?.[1]) {

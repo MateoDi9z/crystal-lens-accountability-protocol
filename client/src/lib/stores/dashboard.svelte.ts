@@ -12,7 +12,11 @@ import {
 	getProposals,
 	resolveOrgAddresses
 } from "$lib/contracts/read";
-import { confirmTransaction, payPendingContribution } from "$lib/contracts/write";
+import {
+	confirmTransaction,
+	payPendingContribution,
+	submitExecuteProposal
+} from "$lib/contracts/write";
 import { governanceAbi } from "$lib/contracts/abi";
 import type { OrgConfig } from "$lib/config/orgs";
 import type { TreasuryOverview, UserStatus, Member, Proposal } from "$lib/contracts/types";
@@ -34,9 +38,18 @@ export interface PaymentFeedback {
 	message: string | null;
 }
 
+export type ReleaseFundsPhase = "idle" | "wallet" | "processing" | "success" | "error";
+
+export interface ReleaseFundsFeedback {
+	phase: ReleaseFundsPhase;
+	message: string | null;
+	amount?: bigint;
+}
+
 export interface OwnedOrgData {
 	org: OrgConfig;
 	members: Member[];
+	proposals: Proposal[];
 }
 
 // Global module state for wallet connection
@@ -166,6 +179,7 @@ class DashboardState {
 	allOrgsData = $state<OrgUserData[]>([]);
 	ownedOrgsData = $state<OwnedOrgData[]>([]);
 	paymentFeedback = $state<Record<string, PaymentFeedback>>({});
+	releaseFundsFeedback = $state<Record<string, ReleaseFundsFeedback>>({});
 
 	// Legacy single-org data
 	treasuryOverview = $state<TreasuryOverview | null>(null);
@@ -252,8 +266,11 @@ export async function refreshAllOrgsDashboard(userAddr?: Address) {
 					});
 					if (owner.toLowerCase() !== address.toLowerCase()) return null;
 
-					const members = await getMembers(org).catch(() => []);
-					return { org, members };
+					const [members, proposals] = await Promise.all([
+						getMembers(org).catch(() => []),
+						getProposals(org).catch(() => [])
+					]);
+					return { org, members, proposals };
 				} catch {
 					return null;
 				}
@@ -352,6 +369,81 @@ export function clearPaymentFeedback(slug: string) {
 	const next = { ...dashboardState.paymentFeedback };
 	delete next[slug];
 	dashboardState.paymentFeedback = next;
+}
+
+function releaseFundsKey(orgSlug: string, proposalId: bigint) {
+	return `${orgSlug}-${proposalId.toString()}`;
+}
+
+function setReleaseFundsFeedback(key: string, feedback: ReleaseFundsFeedback) {
+	dashboardState.releaseFundsFeedback = {
+		...dashboardState.releaseFundsFeedback,
+		[key]: feedback
+	};
+}
+
+export function clearReleaseFundsFeedback(orgSlug: string, proposalId: bigint) {
+	const key = releaseFundsKey(orgSlug, proposalId);
+	const next = { ...dashboardState.releaseFundsFeedback };
+	delete next[key];
+	dashboardState.releaseFundsFeedback = next;
+}
+
+export async function runReleaseFunds(org: OrgConfig, proposalId: bigint, amount: bigint) {
+	const key = releaseFundsKey(org.slug, proposalId);
+	const address = walletAddress;
+	if (!address) return;
+
+	setReleaseFundsFeedback(key, {
+		phase: "wallet",
+		message: "Confirmá la liberación de fondos en el modal de tu billetera…",
+		amount
+	});
+	dashboardState.actionLoading = `release-${key}`;
+
+	try {
+		await initWeb3();
+		const hash = await submitExecuteProposal(proposalId, org);
+		setReleaseFundsFeedback(key, {
+			phase: "processing",
+			message: "Transfiriendo los fondos desde la tesorería de la organización…",
+			amount
+		});
+		await confirmTransaction(hash);
+		await refreshAllOrgsDashboard(address);
+		await updateSepoliaEthBalance(address);
+		setReleaseFundsFeedback(key, {
+			phase: "success",
+			message: "¡Listo! Los fondos aprobados ya están en tu billetera.",
+			amount
+		});
+	} catch (error) {
+		console.error("Release funds failed:", error);
+		setReleaseFundsFeedback(key, {
+			phase: "error",
+			message: parseReleaseFundsError(error),
+			amount
+		});
+	} finally {
+		dashboardState.actionLoading = null;
+	}
+}
+
+function parseReleaseFundsError(error: unknown): string {
+	const message = parseWalletError(error);
+	const lower = message.toLowerCase();
+
+	if (lower.includes("proposal is not approved") || lower.includes("no está aprobada")) {
+		return "Esta propuesta ya no está aprobada. Actualizá la página para ver su estado actual.";
+	}
+	if (lower.includes("insufficient active funds")) {
+		return "La tesorería no tiene fondos suficientes para esta liberación. Verificá que los miembros hayan aportado.";
+	}
+	if (lower.includes("proposal does not exist")) {
+		return "No encontramos esta propuesta. Actualizá la página e intentá de nuevo.";
+	}
+
+	return message.replace("pago", "liberación de fondos");
 }
 
 export async function runAction(

@@ -123,15 +123,19 @@ export async function voteOnProposal(id: bigint, support: boolean, org?: OrgConf
 	return publicClient.waitForTransactionReceipt({ hash });
 }
 
-export async function executeProposal(id: bigint, org?: OrgConfig) {
+export async function submitExecuteProposal(id: bigint, org?: OrgConfig) {
 	const activeOrg = resolveOrg(org);
 	const { governance } = await resolveOrgAddresses(activeOrg);
 
-	const hash = await writeWithConnectedWallet({
+	return writeWithConnectedWallet({
 		address: governance,
 		abi: governanceAbi,
 		functionName: "executeProposal",
 		args: [id]
 	});
+}
+
+export async function executeProposal(id: bigint, org?: OrgConfig) {
+	const hash = await submitExecuteProposal(id, org);
 	return publicClient.waitForTransactionReceipt({ hash });
 }

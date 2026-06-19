@@ -4,16 +4,31 @@
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
 	import { Crown, Loader2, UserPlus, FilePlus, Coins } from "@lucide/svelte";
 	import { formatEther, isAddress, parseEther, type Address } from "viem";
-	import type { Member } from "$lib/contracts/types";
+	import type { Member, Proposal } from "$lib/contracts/types";
+	import OwnerProposalsSection from "$lib/components/app/owner-proposals-section.svelte";
 	import {
 		registerContributor,
 		requestContribution,
 		createProposal
 	} from "$lib/contracts/write";
-	import { refreshDashboard, runAction, getDashboardState } from "$lib/stores/dashboard.svelte";
+	import {
+		refreshAllOrgsDashboard,
+		runAction,
+		getDashboardState
+	} from "$lib/stores/dashboard.svelte";
 	import type { OrgConfig } from "$lib/config/orgs";
 
-	let { org, members, userAddress }: { org: OrgConfig; members: Member[]; userAddress: Address } = $props();
+	let {
+		org,
+		members,
+		proposals,
+		userAddress
+	}: {
+		org: OrgConfig;
+		members: Member[];
+		proposals: Proposal[];
+		userAddress: Address;
+	} = $props();
 
 	const dashboard = getDashboardState();
 
@@ -62,7 +77,7 @@
 		await runAction(
 			`register-contributor-${org.slug}`,
 			() => registerContributor(to, dni.trim(), fullName.trim(), amount, org),
-			() => refreshDashboard(userAddress)
+			() => refreshAllOrgsDashboard(userAddress)
 		);
 
 		wallet = "";
@@ -94,7 +109,7 @@
 		await runAction(
 			`request-debt-${org.slug}`,
 			() => requestContribution(contributor, amount, org),
-			() => refreshDashboard(userAddress)
+			() => refreshAllOrgsDashboard(userAddress)
 		);
 
 		existingWallet = "";
@@ -123,7 +138,7 @@
 		await runAction(
 			`create-proposal-${org.slug}`,
 			() => createProposal(proposalDescription.trim(), amount, org),
-			() => refreshDashboard(userAddress)
+			() => refreshAllOrgsDashboard(userAddress)
 		);
 
 		proposalDescription = "";
@@ -143,10 +158,11 @@
 	<CardHeader>
 		<CardTitle class="flex items-center gap-2 text-2xl font-bold tracking-tight">
 			<Crown class="text-primary size-6" />
-			Administración: {org.name}
+			Panel de gestión
 		</CardTitle>
 		<CardDescription class="text-base">
-			Gestionando como dueño <span class="font-mono bg-muted/50 px-1.5 py-0.5 rounded-md text-xs">{userAddress.slice(0, 6)}…{userAddress.slice(-4)}</span>
+			Gestionando como dueño de {org.name}
+			<span class="font-mono bg-muted/50 px-1.5 py-0.5 rounded-md text-xs">{userAddress.slice(0, 6)}…{userAddress.slice(-4)}</span>
 		</CardDescription>
 	</CardHeader>
 	<CardContent class="grid gap-8">
@@ -260,6 +276,8 @@
 				</Button>
 			</div>
 		</div>
+
+		<OwnerProposalsSection {org} {proposals} />
 
 		<div class="space-y-4">
 			<h3 class="font-bold text-xl">Miembros y aportes</h3>

@@ -13,7 +13,8 @@
 
 	const links = [
 		{ label: "Discover", href: appPaths.discover },
-		{ label: "Dashboard", href: appPaths.dashboard }
+		{ label: "Dashboard", href: appPaths.dashboard },
+		{ label: "Administración", href: appPaths.admin }
 	];
 
 	function isActive(href: string) {

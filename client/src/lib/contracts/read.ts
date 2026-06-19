@@ -267,14 +267,14 @@ export async function isOwner(org: OrgConfig, address: Address): Promise<boolean
 export function proposalStateName(state: ProposalState): string {
 	switch (state) {
 		case ProposalState.Pending:
-			return "Pending";
+			return "En votación";
 		case ProposalState.Approved:
-			return "Approved";
+			return "Aprobada";
 		case ProposalState.Rejected:
-			return "Rejected";
+			return "Rechazada";
 		case ProposalState.Executed:
-			return "Executed";
+			return "Fondos liberados";
 		default:
-			return "Unknown";
+			return "Desconocido";
 	}
 }

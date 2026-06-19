@@ -4,8 +4,7 @@
 	import NetworkWarning from "$lib/components/app/network-warning.svelte";
 	import PendingContributions from "$lib/components/app/pending-contributions.svelte";
 	import GovernanceSection from "$lib/components/app/governance-section.svelte";
-	import OwnerPanel from "$lib/components/app/owner-panel.svelte";
-	import * as Tabs from "$lib/components/ui/tabs/index.js";
+	import MyOrganizationsPanel from "$lib/components/app/my-organizations-panel.svelte";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import DashboardSkeleton from "$lib/components/app/dashboard-skeleton.svelte";
 	import {
@@ -20,10 +19,6 @@
 			refreshAllOrgsDashboard(dashboard.address);
 		}
 	});
-
-	function shortAddress(address: string) {
-		return `${address.slice(0, 6)}…${address.slice(-4)}`;
-	}
 </script>
 
 <svelte:head>
@@ -34,7 +29,7 @@
 	/>
 </svelte:head>
 
-<div class="mx-auto w-4/5 max-w-full px-4 py-10 sm:px-6">
+<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6">
 	<div class="mb-8">
 		<Badge variant="secondary" class="mb-3">Personal</Badge>
 		<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Mi Dashboard</h1>
@@ -52,31 +47,21 @@
 			</div>
 		{/if}
 
-		{#if dashboard.loadingAllOrgs}
-			<DashboardSkeleton />
-		{:else}
-			{#if dashboard.ownedOrgsData.length > 0}
-				<Tabs.Root value="contributor" class="w-full">
-					<Tabs.List class="grid w-full grid-cols-2 mb-6">
-						<Tabs.Trigger value="contributor">Panel de Contribuidor</Tabs.Trigger>
-						<Tabs.Trigger value="owner">Administración (Dueño)</Tabs.Trigger>
-					</Tabs.List>
-					<Tabs.Content value="contributor" class="space-y-6 mt-0">
+		<div class="flex flex-col gap-6 lg:flex-row lg:items-start">
+			<div class="min-w-0 flex-1">
+				{#if dashboard.loadingAllOrgs}
+					<DashboardSkeleton />
+				{:else}
+					<div class="space-y-6">
 						<PendingContributions />
 						<GovernanceSection />
-					</Tabs.Content>
-					<Tabs.Content value="owner" class="space-y-6 mt-0">
-						{#each dashboard.ownedOrgsData as owned (owned.org.slug)}
-							<OwnerPanel org={owned.org} members={owned.members} userAddress={dashboard.address!} />
-						{/each}
-					</Tabs.Content>
-				</Tabs.Root>
-			{:else}
-				<div class="space-y-6">
-					<PendingContributions />
-					<GovernanceSection />
-				</div>
-			{/if}
-		{/if}
+					</div>
+				{/if}
+			</div>
+
+			<aside class="w-full shrink-0 lg:w-72 xl:w-80">
+				<MyOrganizationsPanel />
+			</aside>
+		</div>
 	{/if}
 </div>
