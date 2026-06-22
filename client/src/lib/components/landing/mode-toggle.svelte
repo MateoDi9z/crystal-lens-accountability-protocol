@@ -15,14 +15,19 @@
 		applyMode(mode === "dark" ? "light" : "dark");
 	}
 
-	onMount(() => {
+	function getInitialMode(): "light" | "dark" {
+		const themeParam = new URLSearchParams(window.location.search).get("theme");
+		if (themeParam === "dark") return "dark";
+		if (themeParam === "light") return "light";
+
 		const stored = localStorage.getItem("theme");
-		if (stored === "dark" || stored === "light") {
-			applyMode(stored);
-		} else {
-			const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-			applyMode(prefersDark ? "dark" : "light");
-		}
+		if (stored === "dark" || stored === "light") return stored;
+
+		return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+	}
+
+	onMount(() => {
+		applyMode(getInitialMode());
 	});
 </script>
 

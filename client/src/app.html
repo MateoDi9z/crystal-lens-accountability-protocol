@@ -3,9 +3,15 @@
 	<head>
 		<script>
 			(() => {
-				const stored = localStorage.getItem('theme');
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				const dark = stored === 'dark' || (!stored && prefersDark);
+				const themeParam = new URLSearchParams(window.location.search).get('theme');
+				let dark;
+				if (themeParam === 'dark') dark = true;
+				else if (themeParam === 'light') dark = false;
+				else {
+					const stored = localStorage.getItem('theme');
+					const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+					dark = stored === 'dark' || (!stored && prefersDark);
+				}
 				if (dark) document.documentElement.classList.add('dark');
 			})();
 		</script>
