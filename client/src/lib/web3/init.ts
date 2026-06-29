@@ -1,6 +1,6 @@
 import { browser } from "$app/environment";
 import type { Config } from "@wagmi/core";
-import { getAppKit, getWagmiAdapter, getWagmiConfig } from "./appkit";
+import { getAppKit, getWagmiAdapter, getWagmiConfig, syncAppKitTheme } from "./appkit";
 import { setupWalletWatcher } from "$lib/stores/dashboard.svelte";
 
 let initPromise: Promise<void> | null = null;
@@ -51,6 +51,8 @@ export function initWeb3(): Promise<void> {
 			}
 
 			setupWalletWatcher();
+
+			syncAppKitTheme();
 
 			try {
 				await kit?.ready?.();

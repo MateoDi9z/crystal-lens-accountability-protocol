@@ -5,7 +5,14 @@ import { createAppKit } from "@reown/appkit";
 import type { AppKit } from "@reown/appkit";
 import type { Config } from "@wagmi/core";
 
-const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || "your_reown_project_id_here";
+const PLACEHOLDER_PROJECT_ID = "your_reown_project_id_here";
+
+export function isReownConfigured(): boolean {
+	const id = import.meta.env.VITE_REOWN_PROJECT_ID?.trim();
+	return Boolean(id && id !== PLACEHOLDER_PROJECT_ID);
+}
+
+const projectId = import.meta.env.VITE_REOWN_PROJECT_ID?.trim() || PLACEHOLDER_PROJECT_ID;
 
 export const networks: [typeof sepolia, ...typeof sepolia[]] = [sepolia];
 
@@ -14,7 +21,7 @@ let wagmiConfig: Config | undefined;
 let appKit: AppKit | undefined;
 
 function createWeb3() {
-	if (!browser || appKit) return;
+	if (!browser || appKit || !isReownConfigured()) return;
 
 	wagmiAdapter = new WagmiAdapter({
 		projectId,
@@ -61,8 +68,19 @@ function createWeb3() {
 		},
 		defaultAccountTypes: {
 			eip155: "eoa"
-		}
+		},
+		themeMode: document.documentElement.classList.contains("dark") ? "dark" : "light"
 	});
+}
+
+if (browser) {
+	createWeb3();
+}
+
+export function syncAppKitTheme() {
+	const kit = getAppKit();
+	if (!kit) return;
+	kit.setThemeMode(document.documentElement.classList.contains("dark") ? "dark" : "light");
 }
 
 export function getWagmiAdapter(): WagmiAdapter {

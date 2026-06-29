@@ -1,21 +1,7 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-	import { Button } from "$lib/components/ui/button/index.js";
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
-	import { Gem, Wallet } from "@lucide/svelte";
-	import { getAppKit } from "$lib/web3/appkit";
-	import { initWeb3 } from "$lib/web3/init";
-
-	const hasProjectId = Boolean(import.meta.env.VITE_REOWN_PROJECT_ID);
-
-	onMount(() => {
-		void initWeb3();
-	});
-
-	async function connect() {
-		await initWeb3();
-		getAppKit()?.open({ view: "Connect" });
-	}
+	import WalletButton from "$lib/components/app/wallet-button.svelte";
+	import { Gem } from "@lucide/svelte";
 </script>
 
 <Card class="mx-auto max-w-lg overflow-hidden border-border/50 bg-background/50 backdrop-blur-xl shadow-2xl">
@@ -31,20 +17,10 @@
 		</CardDescription>
 	</CardHeader>
 	<CardContent class="flex flex-col items-center gap-4">
-		{#if hasProjectId}
-			<appkit-button></appkit-button>
-			<Button variant="outline" class="gap-2" onclick={connect}>
-				<Wallet class="size-4" />
-				Conectar
-			</Button>
-			<p class="text-muted-foreground text-center text-sm leading-relaxed max-w-[400px]">
-				Sin complicaciones técnicas. Iniciá sesión con la opción que te resulte más cómoda y empezá a participar en tu organización de inmediato.
-			</p>
-		{:else}
-			<p class="text-destructive text-center text-sm">
-				Configurá <code>VITE_REOWN_PROJECT_ID</code> en <code>client/.env</code> para habilitar la conexión.
-			</p>
-		{/if}
+		<WalletButton size="lg" />
+		<p class="text-muted-foreground text-center text-sm leading-relaxed max-w-[400px]">
+			Sin complicaciones técnicas. Iniciá sesión con la opción que te resulte más cómoda y empezá a participar en tu organización de inmediato.
+		</p>
 	</CardContent>
 	</div>
 </Card>

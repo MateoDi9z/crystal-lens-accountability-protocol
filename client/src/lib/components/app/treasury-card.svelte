@@ -1,15 +1,12 @@
 <script lang="ts">
 	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
+	import AddressDisplay from "$lib/components/app/address-display.svelte";
 	import { Banknote, Users, Landmark, Shield } from "@lucide/svelte";
-	import { formatEther, type Address } from "viem";
+	import { formatEther } from "viem";
 	import type { TreasuryOverview } from "$lib/contracts/types";
 
 	let { treasury }: { treasury: TreasuryOverview } = $props();
-
-	function short(addr: Address) {
-		return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-	}
 </script>
 
 <Card>
@@ -43,9 +40,9 @@
 		</div>
 		<div class="bg-muted/50 rounded-xl p-4 text-sm">
 			<p class="text-muted-foreground mb-1 text-xs uppercase tracking-wide">Governance</p>
-			<p class="font-mono">{short(treasury.governance)}</p>
+			<AddressDisplay address={treasury.governance} truncate class="text-sm" />
 			<p class="text-muted-foreground mt-2 text-xs uppercase tracking-wide">Owner</p>
-			<p class="font-mono">{short(treasury.owner)}</p>
+			<AddressDisplay address={treasury.owner} truncate class="text-sm" />
 		</div>
 	</CardContent>
 </Card>

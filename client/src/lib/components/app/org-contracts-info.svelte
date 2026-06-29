@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Button } from "$lib/components/ui/button/index.js";
-	import { CircleHelp, Copy, Check, ExternalLink, Loader2 } from "@lucide/svelte";
+	import AddressDisplay from "$lib/components/app/address-display.svelte";
+	import { CircleHelp, Loader2 } from "@lucide/svelte";
 	import type { OrgConfig } from "$lib/config/orgs";
 	import { resolveOrgAddresses, type ResolvedOrgAddresses } from "$lib/contracts/read";
-	import type { Address } from "viem";
 
 	let { org }: { org: OrgConfig } = $props();
 
@@ -11,17 +11,11 @@
 	let addresses = $state<ResolvedOrgAddresses | null>(null);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
-	let copiedField = $state<string | null>(null);
-
 	const contractRows = $derived([
 		{ key: "governance", label: "Governance", description: "Propuestas y votaciones" },
 		{ key: "treasury", label: "Treasury", description: "Fondos y aportes" },
 		{ key: "membership", label: "Membership", description: "Miembros y credenciales" }
 	] as const);
-
-	function etherscanUrl(address: Address) {
-		return `https://sepolia.etherscan.io/address/${address}`;
-	}
 
 	async function openModal() {
 		error = null;
@@ -44,18 +38,6 @@
 
 	function closeModal() {
 		dialog?.close();
-	}
-
-	async function copyAddress(field: string, address: Address) {
-		try {
-			await navigator.clipboard.writeText(address);
-			copiedField = field;
-			setTimeout(() => {
-				if (copiedField === field) copiedField = null;
-			}, 2000);
-		} catch {
-			// Ignore clipboard failures
-		}
 	}
 
 	function handleBackdropClick(event: MouseEvent) {
@@ -106,34 +88,7 @@
 						<p class="text-sm font-medium">{row.label}</p>
 						<span class="text-muted-foreground text-xs">{row.description}</span>
 					</div>
-					<p class="font-mono text-xs break-all">{address}</p>
-					<div class="mt-2 flex gap-1">
-						<Button
-							variant="outline"
-							size="xs"
-							class="h-7 gap-1"
-							onclick={() => copyAddress(row.key, address)}
-						>
-							{#if copiedField === row.key}
-								<Check class="size-3" />
-								Copiado
-							{:else}
-								<Copy class="size-3" />
-								Copiar
-							{/if}
-						</Button>
-						<Button
-							variant="ghost"
-							size="xs"
-							class="h-7 gap-1"
-							href={etherscanUrl(address)}
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<ExternalLink class="size-3" />
-							Etherscan
-						</Button>
-					</div>
+					<AddressDisplay address={address} breakAll class="text-xs" />
 				</div>
 			{/each}
 		{/if}

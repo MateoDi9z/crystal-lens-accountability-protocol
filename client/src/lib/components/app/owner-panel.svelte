@@ -2,6 +2,7 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
+	import AddressDisplay from "$lib/components/app/address-display.svelte";
 	import { Crown, Loader2, UserPlus, FilePlus, Coins } from "@lucide/svelte";
 	import { formatEther, isAddress, parseEther, type Address } from "viem";
 	import type { Member, Proposal } from "$lib/contracts/types";
@@ -162,7 +163,7 @@
 		</CardTitle>
 		<CardDescription class="text-base">
 			Gestionando como dueño de {org.name}
-			<span class="font-mono bg-muted/50 px-1.5 py-0.5 rounded-md text-xs">{userAddress.slice(0, 6)}…{userAddress.slice(-4)}</span>
+			<AddressDisplay address={userAddress} truncate class="bg-muted/50 rounded-md px-1.5 py-0.5 text-xs" />
 		</CardDescription>
 	</CardHeader>
 	<CardContent class="grid gap-8">
@@ -304,8 +305,8 @@
 										<p class="font-semibold text-foreground">{member.data?.fullName ?? "—"}</p>
 										<p class="text-muted-foreground text-xs mt-0.5">DNI {member.data?.dni ?? "—"}</p>
 									</td>
-									<td class="text-muted-foreground px-5 py-4 font-mono text-xs">
-										{member.address.slice(0, 6)}…{member.address.slice(-4)}
+									<td class="text-muted-foreground px-5 py-4 text-xs">
+										<AddressDisplay address={member.address} truncate />
 									</td>
 									<td class="px-5 py-4">{member.pendingContribution > 0n ? `${formatEther(member.pendingContribution)} ETH` : "—"}</td>
 									<td class="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-medium">{member.totalPaid > 0n ? `${formatEther(member.totalPaid)} ETH` : "—"}</td>

@@ -2,6 +2,7 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
+	import AddressDisplay from "$lib/components/app/address-display.svelte";
 	import { Fingerprint, Loader2 } from "@lucide/svelte";
 	import { formatEther } from "viem";
 	import type { UserStatus } from "$lib/contracts/types";
@@ -35,7 +36,7 @@
 		</CardTitle>
 	</CardHeader>
 	<CardContent class="space-y-4">
-		<p class="font-mono text-sm">{user.address}</p>
+		<AddressDisplay address={user.address} class="text-sm" />
 
 		<div class="flex flex-wrap gap-2">
 			<Badge variant={user.isMember ? "default" : "outline"}>

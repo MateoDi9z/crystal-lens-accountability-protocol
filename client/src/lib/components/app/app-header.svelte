@@ -5,6 +5,7 @@
 	import { formatEther } from "viem";
 	import ModeToggle from "$lib/components/landing/mode-toggle.svelte";
 	import { onMount } from "svelte";
+	import WalletButton from "$lib/components/app/wallet-button.svelte";
 	import { appPaths } from "$lib/config/paths";
 	import { getDashboardState } from "$lib/stores/dashboard.svelte";
 	import { initWeb3 } from "$lib/web3/init";
@@ -75,7 +76,7 @@
 				{/if}
 			{/if}
 
-			<appkit-button balance="hide"></appkit-button>
+			<WalletButton size="sm" />
 		</div>
 	</div>
 </header>

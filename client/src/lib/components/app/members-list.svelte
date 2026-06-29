@@ -1,16 +1,12 @@
 <script lang="ts">
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
+	import AddressDisplay from "$lib/components/app/address-display.svelte";
 	import { Users } from "@lucide/svelte";
 	import { formatEther } from "viem";
 	import type { Member } from "$lib/contracts/types";
-	import type { Address } from "viem";
 
 	let { members }: { members: Member[] } = $props();
-
-	function short(addr: Address) {
-		return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-	}
 
 	function debtStatus(member: Member) {
 		if (!member.isContributor) return { label: "No debt", variant: "outline" as const };
@@ -37,7 +33,7 @@
 					<div class="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
 						<div>
 							<p class="font-medium">{member.data?.fullName ?? "Unknown"}</p>
-							<p class="text-muted-foreground font-mono text-xs">{short(member.address)}</p>
+							<AddressDisplay address={member.address} truncate class="text-muted-foreground text-xs" />
 						</div>
 						<div class="flex flex-wrap items-center gap-2 text-xs">
 							<span class="text-muted-foreground">DNI {member.data?.dni ?? "—"}</span>
