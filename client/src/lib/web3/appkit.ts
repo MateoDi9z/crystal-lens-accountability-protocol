@@ -21,7 +21,11 @@ let wagmiConfig: Config | undefined;
 let appKit: AppKit | undefined;
 
 function createWeb3() {
-	if (!browser || appKit || !isReownConfigured()) return;
+	if (!browser || appKit) return;
+	if (!isReownConfigured()) {
+		console.warn("[Reown] VITE_REOWN_PROJECT_ID no está configurado. Wallet deshabilitada.");
+		return;
+	}
 
 	wagmiAdapter = new WagmiAdapter({
 		projectId,

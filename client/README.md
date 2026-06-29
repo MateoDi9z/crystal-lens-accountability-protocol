@@ -18,6 +18,35 @@ Este es el cliente frontend de **CLAP (Crystal Lens Accountability Protocol)** d
 
 ---
 
+## Despliegue en Vercel (Reown / WalletConnect)
+
+El ID del proyecto Reown se inyecta en build vía `VITE_REOWN_PROJECT_ID`.
+
+**Pasos:**
+
+1. En el dashboard de Vercel → tu proyecto → **Settings → Environment Variables** agrega (para Production y Preview):
+   - `VITE_REOWN_PROJECT_ID`
+   - `VITE_RPC_URL`
+   - `VITE_CHAIN_ID`
+   - Las `VITE_ORG_*_GOVERNANCE`
+
+2. Redeploy después de agregar las variables.
+
+3. **Imprescindible para que funcione Reown en producción**:
+   - Entra a [Reown Dashboard](https://dashboard.reown.com)
+   - Selecciona tu proyecto
+   - Agrega los dominios de producción en la sección **Domains / Allowed origins / App URLs**:
+     - `https://crystal-lens-accountability-protocol.vercel.app`
+     - `https://crystal-lens.vercel.app`
+     - Cualquier dominio propio que uses
+   - (Opcional durante desarrollo) agrega `http://localhost:5173` etc.
+
+Si el dominio de producción **no está permitido** en Reown, el modal se abre pero las conexiones (WalletConnect, social login, etc.) fallan o no responden. El injected (MetaMask directo) puede funcionar parcialmente.
+
+Localhost suele funcionar sin registrar porque Reown permite desarrollo por defecto.
+
+---
+
 ## Sepolia Faucets (Fondos de prueba)
 
 Para realizar transacciones de pago, creación de propuestas o votaciones, necesitas Sepolia ETH. Consíguelos gratis aquí:

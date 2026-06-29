@@ -28,13 +28,24 @@
 	});
 
 	async function handleClick() {
-		if (!isReownConfigured()) return;
-		await initWeb3();
-		const kit = getAppKit();
-		if (dashboard.isConnected) {
-			kit?.open({ view: "Account" });
-		} else {
-			kit?.open({ view: "Connect" });
+		if (!isReownConfigured()) {
+			console.warn("[Reown] VITE_REOWN_PROJECT_ID no configurado o es placeholder.");
+			return;
+		}
+		try {
+			await initWeb3();
+			const kit = getAppKit();
+			if (!kit) {
+				console.error("[Reown] AppKit no inicializado después de initWeb3().");
+				return;
+			}
+			if (dashboard.isConnected) {
+				kit.open({ view: "Account" });
+			} else {
+				kit.open({ view: "Connect" });
+			}
+		} catch (err) {
+			console.error("[Reown] Error abriendo el modal de conexión:", err);
 		}
 	}
 
