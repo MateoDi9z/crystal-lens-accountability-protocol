@@ -15,30 +15,30 @@ export interface OrgConfig {
 
 const DEFAULT_ORGS: OrgConfig[] = [
 	{
-		slug: "muni_campana",
-		name: "Municipio de Campana",
-		description: "Transparencia en el uso de los fondos públicos del Municipio de Campana.",
-		nftImage: "/nft/campana.webp",
+		slug: "muni",
+		name: "Municipio de Puerto Lumen",
+		description: "Transparencia en el uso de los fondos públicos del Municipio de Puerto Lumen.",
+		nftImage: "/nft/muni.webp",
 		membershipDisplayTokenId: 1,
 		addresses: {
 			governance: (import.meta.env.VITE_ORG_1_GOVERNANCE as `0x${string}`) || "0x0000000000000000000000000000000000000000"
 		}
 	},
 	{
-		slug: "club_ciudad_campana",
-		name: "Club Ciudad de Campana",
+		slug: "club",
+		name: "Club Ciudad de Puerto Lumen",
 		description: "Administración transparente de las cuotas y aportes extraordinarios de los socios del club.",
-		nftImage: "/nft/ccc.webp",
+		nftImage: "/nft/club.webp",
 		membershipDisplayTokenId: 1,
 		addresses: {
 			governance: (import.meta.env.VITE_ORG_2_GOVERNANCE as `0x${string}`) || "0x0000000000000000000000000000000000000000"
 		}
 	},
 	{
-		slug: "boca",
-		name: "Boca Juniors",
-		description: "Gobernanza comunitaria y rendición de cuentas para proyectos especiales de la comunidad xeneize.",
-		nftImage: "/nft/boca.webp",
+		slug: "football_club",
+		name: "Club Atletico Estrella",
+		description: "Gobernanza comunitaria y rendición de cuentas para proyectos especiales de la comunidad del club.",
+		nftImage: "/nft/football_club.webp",
 		membershipDisplayTokenId: 1,
 		addresses: {
 			governance: (import.meta.env.VITE_ORG_3_GOVERNANCE as `0x${string}`) || "0x0000000000000000000000000000000000000000"
