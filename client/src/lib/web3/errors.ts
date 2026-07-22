@@ -58,53 +58,65 @@ export function parseWalletError(error: unknown): string {
 	const message = resolveDisplayMessage(error);
 	const lower = message.toLowerCase();
 
+	if (lower.includes("already member") || lower.includes("already a member") || lower.includes("alreadycontributor")) {
+		return "Esta cuenta ya se encuentra registrada como miembro de la organización.";
+	}
+	if (lower.includes("ownableunauthorizedaccount") || lower.includes("unauthorizedaccount")) {
+		return "No tenés permisos de administrador para ejecutar esta acción.";
+	}
+	if (lower.includes("alreadycontributor") || lower.includes("already a contributor")) {
+		return "Esta cuenta ya se encuentra registrada como contribuyente.";
+	}
+	if (lower.includes("pendingdebtremaining") || lower.includes("pending debt")) {
+		return "No se puede realizar la acción porque hay un aporte o deuda pendiente sin saldar.";
+	}
 	if (lower.includes("user rejected") || lower.includes("user denied")) {
 		return "Cancelaste la operación en tu billetera.";
 	}
 	if (lower.includes("insufficient funds")) {
-		return "No tenés suficiente Sepolia ETH para pagar. Conseguí ETH de prueba en un faucet.";
+		return "No tenés suficiente ETH en tu billetera para cubrir la transacción y el gas.";
 	}
 	if (
 		lower.includes("chainmismatch") ||
 		(lower.includes("does not match") && lower.includes("chain"))
 	) {
-		return "No pudimos cambiar a Sepolia. Abrí el selector de red de Reown, elegí Sepolia e intentá de nuevo.";
+		return "La red seleccionada en tu billetera no coincide con la red configurada.";
 	}
 	if (lower.includes("switch network") || lower.includes("switch_chain")) {
-		return "No se pudo cambiar a Sepolia. Usá el botón de red de Reown para seleccionar Sepolia.";
+		return "No se pudo cambiar de red automáticamente. Cambiá la red desde tu billetera.";
 	}
 	if (lower.includes("not connected") || lower.includes("connector not connected")) {
-		return "No hay billetera conectada. Volvé a iniciar sesión e intentá de nuevo.";
+		return "No hay billetera conectada. Volvé a conectar tu billetera e intentá de nuevo.";
 	}
 	if (lower.includes("not a member") || lower.includes("only members")) {
 		return "Tu cuenta no está registrada como miembro de esta organización.";
 	}
 	if (lower.includes("amount is not the same") || lower.includes("pending contribution")) {
-		return "El monto no coincide con tu contribución pendiente. Recargá la página e intentá de nuevo.";
+		return "El monto ingresado no coincide con la contribución pendiente.";
 	}
 	if (lower.includes("proposal is not approved")) {
-		return "Esta propuesta ya no está aprobada. Actualizá la página para ver su estado actual.";
+		return "Esta propuesta aún no está aprobada para ejecutarse.";
 	}
 	if (lower.includes("insufficient active funds")) {
-		return "La tesorería no tiene fondos suficientes. Verificá que los miembros hayan aportado.";
+		return "La tesorería no tiene fondos suficientes para transferir este monto.";
 	}
 	if (lower.includes("proposal does not exist")) {
-		return "No encontramos esta propuesta. Actualizá la página e intentá de nuevo.";
+		return "No encontramos esta propuesta de decisión.";
 	}
 	if (lower.includes("execution reverted") || lower.includes("revert")) {
-		const revertMatch = message.match(/reason:\s*([^|]+)/i);
+		const revertMatch = message.match(/reason:\s*([^|]+)/i) || message.match(/revert:\s*([^|]+)/i);
 		if (revertMatch?.[1]) {
-			return `La transacción fue rechazada: ${revertMatch[1].trim()}`;
+			return `La transacción falló: ${revertMatch[1].trim()}`;
 		}
-		return "El contrato rechazó la transacción. Verificá que seas miembro y que el monto sea correcto.";
+		return "La transacción fue rechazada por el contrato inteligente.";
 	}
 	if (lower.includes("gas") || lower.includes("estimation")) {
-		return "No se pudo estimar el gas de la transacción. Reintentá en unos segundos.";
+		return "No se pudo estimar el gas de la transacción. Verificá que los datos ingresados sean válidos.";
 	}
 
 	if (import.meta.env.DEV && message) {
-		return `Error al pagar: ${message.slice(0, 400)}`;
+		return `Error de transacción: ${message.slice(0, 300)}`;
 	}
 
-	return "Algo salió mal al procesar el pago. Intentá de nuevo.";
+	return "No se pudo completar la transacción. Intentá de nuevo en unos momentos.";
 }

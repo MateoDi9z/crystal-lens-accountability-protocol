@@ -178,7 +178,7 @@
 					Invitar nuevo miembro
 				</h3>
 				<p class="text-muted-foreground text-sm">
-					Registra al usuario y le asigna su aporte inicial en **1 sola transacción atómica**.
+					Registra al usuario, se le asigna una contribucion automaticamente.
 				</p>
 				<div class="space-y-3 mt-4">
 					<input

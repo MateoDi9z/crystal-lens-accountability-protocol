@@ -54,7 +54,23 @@ export async function payPendingContribution(amount: bigint, org?: OrgConfig, pa
 }
 
 export async function confirmTransaction(hash: `0x${string}`) {
-	return publicClient.waitForTransactionReceipt({ hash });
+	const receipt = await publicClient.waitForTransactionReceipt({ hash });
+	if (receipt.status === "reverted") {
+		try {
+			const tx = await publicClient.getTransaction({ hash });
+			await publicClient.call({
+				to: tx.to,
+				data: tx.input,
+				value: tx.value,
+				account: tx.from,
+				blockNumber: receipt.blockNumber > 0n ? receipt.blockNumber - 1n : undefined
+			});
+		} catch (revertError) {
+			throw revertError;
+		}
+		throw new Error("La transacción fue rechazada en la blockchain (reverted).");
+	}
+	return receipt;
 }
 
 export async function registerContributor(
@@ -73,7 +89,7 @@ export async function registerContributor(
 		functionName: "registerContributor",
 		args: [to, { dni, fullName }, amount]
 	});
-	return publicClient.waitForTransactionReceipt({ hash });
+	return confirmTransaction(hash);
 }
 
 export async function requestContribution(contributor: Address, amount: bigint, org?: OrgConfig) {
@@ -86,7 +102,7 @@ export async function requestContribution(contributor: Address, amount: bigint, 
 		functionName: "requestContribution",
 		args: [contributor, amount]
 	});
-	return publicClient.waitForTransactionReceipt({ hash });
+	return confirmTransaction(hash);
 }
 
 export async function createProposal(description: string, amount: bigint, org?: OrgConfig) {
@@ -99,7 +115,7 @@ export async function createProposal(description: string, amount: bigint, org?: 
 		functionName: "createProposal",
 		args: [description, amount]
 	});
-	return publicClient.waitForTransactionReceipt({ hash });
+	return confirmTransaction(hash);
 }
 
 export async function voteOnProposal(id: bigint, support: boolean, org?: OrgConfig) {
@@ -112,7 +128,7 @@ export async function voteOnProposal(id: bigint, support: boolean, org?: OrgConf
 		functionName: "vote",
 		args: [id, support]
 	});
-	return publicClient.waitForTransactionReceipt({ hash });
+	return confirmTransaction(hash);
 }
 
 export async function submitExecuteProposal(id: bigint, org?: OrgConfig) {
@@ -129,5 +145,5 @@ export async function submitExecuteProposal(id: bigint, org?: OrgConfig) {
 
 export async function executeProposal(id: bigint, org?: OrgConfig) {
 	const hash = await submitExecuteProposal(id, org);
-	return publicClient.waitForTransactionReceipt({ hash });
+	return confirmTransaction(hash);
 }

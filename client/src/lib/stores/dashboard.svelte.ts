@@ -46,6 +46,14 @@ export interface ReleaseFundsFeedback {
 	amount?: bigint;
 }
 
+export type TxPhase = "idle" | "wallet" | "processing" | "success" | "error";
+
+export interface TxStatus {
+	phase: TxPhase;
+	title?: string;
+	message?: string;
+}
+
 export interface OwnedOrgData {
 	org: OrgConfig;
 	members: Member[];
@@ -165,7 +173,21 @@ export function setupWalletWatcher() {
 
 class DashboardState {
 	actionLoading = $state<string | null>(null);
+	actionError = $state<{ title?: string; message: string } | null>(null);
+	txStatus = $state<TxStatus | null>(null);
 	loadingAllOrgs = $state(false);
+
+	setTxStatus(status: TxStatus | null) {
+		this.txStatus = status;
+	}
+
+	clearTxStatus() {
+		this.txStatus = null;
+	}
+
+	clearActionError() {
+		this.actionError = null;
+	}
 
 	address = $derived(walletAddress);
 	isConnected = $derived(isConnectedState);
@@ -356,10 +378,15 @@ export async function runPayment(org: OrgConfig, amount: bigint) {
 		});
 	} catch (error) {
 		console.error("Payment failed:", error);
+		const message = parseWalletError(error);
 		setPaymentFeedback(slug, {
 			phase: "error",
-			message: parseWalletError(error)
+			message
 		});
+		dashboardState.actionError = {
+			title: "Error al realizar el pago",
+			message
+		};
 	} finally {
 		dashboardState.actionLoading = null;
 	}
@@ -419,11 +446,16 @@ export async function runReleaseFunds(org: OrgConfig, proposalId: bigint, amount
 		});
 	} catch (error) {
 		console.error("Release funds failed:", error);
+		const message = parseReleaseFundsError(error);
 		setReleaseFundsFeedback(key, {
 			phase: "error",
-			message: parseReleaseFundsError(error),
+			message,
 			amount
 		});
+		dashboardState.actionError = {
+			title: "Error al liberar fondos",
+			message
+		};
 	} finally {
 		dashboardState.actionLoading = null;
 	}
@@ -449,17 +481,50 @@ function parseReleaseFundsError(error: unknown): string {
 export async function runAction(
 	key: string,
 	actionFn: () => Promise<any>,
-	successCallback?: () => any
+	successCallback?: () => any,
+	options?: { title?: string; successMessage?: string }
 ) {
 	dashboardState.actionLoading = key;
+	dashboardState.actionError = null;
+	dashboardState.setTxStatus({
+		phase: "wallet",
+		title: options?.title ?? "Confirmación en billetera",
+		message: "Confirmá la transacción en tu billetera para continuar..."
+	});
+
 	try {
-		await actionFn();
+		const result = await actionFn();
+		dashboardState.setTxStatus({
+			phase: "processing",
+			title: "Procesando transacción",
+			message: "Esperando confirmación en la blockchain..."
+		});
+
+		if (typeof result === "string" && result.startsWith("0x")) {
+			await confirmTransaction(result as `0x${string}`);
+		}
+
 		if (successCallback) {
 			await successCallback();
 		}
+
+		dashboardState.setTxStatus({
+			phase: "success",
+			title: "¡Transacción completada!",
+			message: options?.successMessage ?? "La operación se registró exitosamente en la blockchain."
+		});
 	} catch (error: unknown) {
 		console.error(`Error running action ${key}:`, error);
-		alert(parseWalletError(error));
+		const message = parseWalletError(error);
+		dashboardState.actionError = {
+			title: "Atención",
+			message
+		};
+		dashboardState.setTxStatus({
+			phase: "error",
+			title: "No se pudo realizar la transacción",
+			message
+		});
 	} finally {
 		dashboardState.actionLoading = null;
 	}
