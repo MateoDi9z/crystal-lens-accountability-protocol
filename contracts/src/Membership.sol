@@ -11,6 +11,8 @@ interface ITreasury {
     function isContributorWithoutPendingContributions(address user) external view returns (bool);
 
     function decrementContributorCount() external;
+
+    function requestContribution(address contributor, uint256 amount) external;
 }
 
 struct MemberData {
@@ -80,7 +82,7 @@ contract Membership is ERC721, Ownable {
     // MEMBERSHIP LOGIC
     // =========================
 
-    function mint(address to, MemberData calldata memberData) external onlyOwner whenTreasurySet returns (uint256) {
+    function _mintMemberInternal(address to, MemberData calldata memberData) internal returns (uint256) {
         require(to != address(0), "Invalid address");
         require(!isMember(to), "Already member");
         require(bytes(memberData.dni).length > 0, "DNI required");
@@ -91,6 +93,22 @@ contract Membership is ERC721, Ownable {
         _memberTokenId[to] = tokenId;
         _memberData[tokenId] = memberData;
         emit MemberAdded(to, tokenId);
+        return tokenId;
+    }
+
+    function mint(address to, MemberData calldata memberData) external onlyOwner whenTreasurySet returns (uint256) {
+        return _mintMemberInternal(to, memberData);
+    }
+
+    function registerContributor(
+        address to,
+        MemberData calldata memberData,
+        uint256 initialContribution
+    ) external onlyOwner whenTreasurySet returns (uint256) {
+        uint256 tokenId = _mintMemberInternal(to, memberData);
+        if (initialContribution > 0) {
+            treasury.requestContribution(to, initialContribution);
+        }
         return tokenId;
     }
 

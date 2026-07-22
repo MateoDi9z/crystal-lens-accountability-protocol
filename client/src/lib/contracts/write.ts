@@ -26,7 +26,7 @@ async function writeWithConnectedWallet<
 		address: params.address,
 		abi: params.abi,
 		functionName: params.functionName,
-		args: params.args,
+		args: params.args as readonly unknown[] | undefined,
 		value: params.value
 	});
 }
@@ -65,23 +65,15 @@ export async function registerContributor(
 	org?: OrgConfig
 ) {
 	const activeOrg = resolveOrg(org);
-	const { membership, treasury } = await resolveOrgAddresses(activeOrg);
+	const { membership } = await resolveOrgAddresses(activeOrg);
 
-	const mintHash = await writeWithConnectedWallet({
+	const hash = await writeWithConnectedWallet({
 		address: membership,
 		abi: membershipAbi,
-		functionName: "mint",
-		args: [to, { dni, fullName }]
+		functionName: "registerContributor",
+		args: [to, { dni, fullName }, amount]
 	});
-	await publicClient.waitForTransactionReceipt({ hash: mintHash });
-
-	const debtHash = await writeWithConnectedWallet({
-		address: treasury,
-		abi: treasuryAbi,
-		functionName: "requestContribution",
-		args: [to, amount]
-	});
-	return publicClient.waitForTransactionReceipt({ hash: debtHash });
+	return publicClient.waitForTransactionReceipt({ hash });
 }
 
 export async function requestContribution(contributor: Address, amount: bigint, org?: OrgConfig) {

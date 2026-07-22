@@ -88,8 +88,7 @@ export async function executeContractTransaction(params: {
 					value,
 					account: account.address,
 					connector,
-					chainId: SEPOLIA_CHAIN_ID,
-					chain: sepolia
+					chainId: SEPOLIA_CHAIN_ID
 				});
 			} catch {
 				throw authError;
@@ -105,7 +104,6 @@ export async function executeContractTransaction(params: {
 		value,
 		account: account.address,
 		connector,
-		chainId: SEPOLIA_CHAIN_ID,
-		chain: sepolia
+		chainId: SEPOLIA_CHAIN_ID
 	});
 }

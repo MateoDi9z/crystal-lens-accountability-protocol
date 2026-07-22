@@ -7,6 +7,8 @@ import {MemberData, Membership} from "../src/Membership.sol";
 contract TreasuryMock {
     bool public isContributorWithoutPendingContributionsResult = true;
     uint256 public decrementCalls;
+    address public requestedContributor;
+    uint256 public requestedAmount;
 
     function setIsContributorWithoutPendingContributionsResult(bool value) external {
         isContributorWithoutPendingContributionsResult = value;
@@ -18,6 +20,11 @@ contract TreasuryMock {
 
     function decrementContributorCount() external {
         decrementCalls++;
+    }
+
+    function requestContribution(address contributor, uint256 amount) external {
+        requestedContributor = contributor;
+        requestedAmount = amount;
     }
 }
 
@@ -56,6 +63,15 @@ contract MembershipTest is Test {
         assertEq(membership.balanceOf(alice), 1);
         assertEq(membership.ownerOf(tokenId), alice);
         assertEq(membership.getMemberTokenId(alice), tokenId);
+    }
+
+    function testRegisterContributorSingleTx() public {
+        uint256 tokenId = membership.registerContributor(alice, MemberData("12345678", "Alice Smith"), 1 ether);
+
+        assertEq(membership.balanceOf(alice), 1);
+        assertEq(membership.ownerOf(tokenId), alice);
+        assertEq(treasury.requestedContributor(), alice);
+        assertEq(treasury.requestedAmount(), 1 ether);
     }
 
     function testCannotMintTwice() public {

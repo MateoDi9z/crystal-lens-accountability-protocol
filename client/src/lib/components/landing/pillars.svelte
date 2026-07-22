@@ -59,7 +59,7 @@
 			initial={{ opacity: 0, y: 40 }}
 			whileInView={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-			viewport={{ once: true, margin: "-100px" }}
+			inViewOptions={{ once: true, margin: "-100px" }}
 			class="mb-16 text-center"
 		>
 			<Badge variant="secondary" class="mb-4">Architecture</Badge>
@@ -82,7 +82,7 @@
 					initial={{ opacity: 0, y: 40 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.6, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
-					viewport={{ once: true, margin: "-80px" }}
+					inViewOptions={{ once: true, margin: "-80px" }}
 					whileHover={{ y: -4 }}
 					class="group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card/80 p-8 shadow-sm transition-all duration-300 hover:border-primary/20 hover:shadow-md dark:bg-transparent dark:shadow-none dark:hover:border-border"
 				>

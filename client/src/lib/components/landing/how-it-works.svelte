@@ -43,7 +43,7 @@
 			initial={{ opacity: 0, y: 40 }}
 			whileInView={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-			viewport={{ once: true, margin: "-100px" }}
+			inViewOptions={{ once: true, margin: "-100px" }}
 			class="mb-16 text-center"
 		>
 			<Badge variant="secondary" class="mb-4">How It Works</Badge>
@@ -67,7 +67,7 @@
 						initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
 						whileInView={{ opacity: 1, x: 0 }}
 						transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-						viewport={{ once: true, margin: "-80px" }}
+						inViewOptions={{ once: true, margin: "-80px" }}
 						class="relative flex flex-col gap-6 md:flex-row md:gap-10"
 					>
 						<div class="flex shrink-0 items-start gap-4 md:w-48 md:flex-col md:gap-2">
@@ -98,7 +98,7 @@
 										initial={{ opacity: 0, x: -10 }}
 										whileInView={{ opacity: 1, x: 0 }}
 										transition={{ duration: 0.3, delay: 0.2 + j * 0.08 }}
-										viewport={{ once: true }}
+										inViewOptions={{ once: true }}
 									>
 										<Badge variant="secondary" class="text-xs">{highlight}</Badge>
 									</motion.div>

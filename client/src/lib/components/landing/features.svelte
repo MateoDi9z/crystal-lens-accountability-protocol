@@ -22,14 +22,14 @@
 			initial={{ opacity: 0, y: 40 }}
 			whileInView={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-			viewport={{ once: true, margin: "-100px" }}
+			inViewOptions={{ once: true, margin: "-100px" }}
 			class="mb-16 text-center"
 		>
 			<motion.div
 				initial={{ opacity: 0, scale: 0.8 }}
 				whileInView={{ opacity: 1, scale: 1 }}
 				transition={{ duration: 0.3 }}
-				viewport={{ once: true }}
+				inViewOptions={{ once: true }}
 			>
 				<Badge variant="secondary" class="mb-4">Why CLAP</Badge>
 			</motion.div>
@@ -54,7 +54,7 @@
 					initial={{ opacity: 0, y: 20, scale: 0.95 }}
 					whileInView={{ opacity: 1, y: 0, scale: 1 }}
 					transition={{ duration: 0.35, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-					viewport={{ once: true, margin: "-50px" }}
+					inViewOptions={{ once: true, margin: "-50px" }}
 				>
 					<motion.div
 						whileHover={{ x: 3, scale: 1.02 }}

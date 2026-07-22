@@ -17,14 +17,14 @@
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: i * 0.1 }}
-					viewport={{ once: true }}
+					inViewOptions={{ once: true }}
 					class="text-center"
 				>
 					<motion.div
 						class="text-foreground text-3xl font-bold tracking-tight sm:text-4xl"
 						whileInView={{ scale: [1, 1.1, 1] }}
 						transition={{ duration: 0.4, delay: i * 0.1 + 0.3 }}
-						viewport={{ once: true }}
+						inViewOptions={{ once: true }}
 					>
 						{stat.value}
 					</motion.div>

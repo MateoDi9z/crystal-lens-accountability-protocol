@@ -6,6 +6,7 @@ import {Governance} from "../src/Governance.sol";
 
 contract MockTreasury {
     mapping(address => bool) public contributors;
+    mapping(address => bool) public hasPendingDebt;
 
     uint256 public contributorCount;
     address public lastRecipient;
@@ -25,8 +26,16 @@ contract MockTreasury {
         }
     }
 
+    function setPendingDebt(address user, bool value) external {
+        hasPendingDebt[user] = value;
+    }
+
     function isContributor(address user) external view returns (bool) {
         return contributors[user];
+    }
+
+    function isContributorWithoutPendingContributions(address user) external view returns (bool) {
+        return contributors[user] && !hasPendingDebt[user];
     }
 
     function getContributorCount() external view returns (uint256) {
@@ -158,7 +167,18 @@ contract GovernanceTest is Test {
 
         vm.prank(randomUser);
 
-        vm.expectRevert("Not contributor");
+        vm.expectRevert("Contributor has pending debt");
+
+        governance.vote(proposalId, true);
+    }
+
+    function testContributorWithPendingDebtCannotVote() public {
+        governance.createProposal("Test", 1 ether);
+        treasury.setPendingDebt(alice, true);
+
+        vm.prank(alice);
+
+        vm.expectRevert("Contributor has pending debt");
 
         governance.vote(proposalId, true);
     }

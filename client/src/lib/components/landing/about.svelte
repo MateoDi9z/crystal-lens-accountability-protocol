@@ -36,7 +36,7 @@
 	<div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
 		<motion.div
 			class="absolute left-[20%] top-[30%] h-[40%] w-[40%] rounded-full opacity-10 blur-[120px]"
-			style="background: radial-gradient(circle, oklch(0.6 0.2 250), transparent 70%)"
+			style={{ background: "radial-gradient(circle, oklch(0.6 0.2 250), transparent 70%)" }}
 			animate={{ scale: [1, 1.15, 1], rotate: [0, 5, 0] }}
 			transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
 		></motion.div>
@@ -47,14 +47,14 @@
 			initial={{ opacity: 0, y: 40 }}
 			whileInView={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-			viewport={{ once: true, margin: "-100px" }}
+			inViewOptions={{ once: true, margin: "-100px" }}
 			class="mb-16 text-center"
 		>
 			<motion.div
 				initial={{ opacity: 0, scale: 0.8 }}
 				whileInView={{ opacity: 1, scale: 1 }}
 				transition={{ duration: 0.3, delay: 0.1 }}
-				viewport={{ once: true }}
+				inViewOptions={{ once: true }}
 			>
 				<Badge variant="secondary" class="mb-4">What is CLAP</Badge>
 			</motion.div>
@@ -80,7 +80,7 @@
 					initial={{ opacity: 0, y: 30 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
-					viewport={{ once: true, margin: "-80px" }}
+					inViewOptions={{ once: true, margin: "-80px" }}
 				>
 					<motion.div
 						whileHover={{ y: -4, scale: 1.01 }}

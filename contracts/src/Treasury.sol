@@ -46,6 +46,11 @@ contract Treasury is Ownable, ReentrancyGuard {
         _;
     }
 
+    modifier onlyOwnerOrMembership() {
+        require(msg.sender == owner() || msg.sender == address(membership), "Not authorized");
+        _;
+    }
+
     constructor(address membershipAddress, address _owner) Ownable(_owner) {
         require(membershipAddress != address(0), "Invalid membership address");
         require(_owner != address(0), "Invalid owner address");
@@ -59,7 +64,7 @@ contract Treasury is Ownable, ReentrancyGuard {
         emit GovernanceUpdated(oldGov, _governance);
     }
 
-    function requestContribution(address contributor, uint256 amount) external onlyOwner {
+    function requestContribution(address contributor, uint256 amount) external onlyOwnerOrMembership {
         require(membership.isMember(contributor), "Not an active member");
         require(amount > 0, "Amount must be greater than 0");
 

@@ -10,13 +10,14 @@
 
 <section class="relative overflow-hidden px-4 py-24 sm:py-32">
 	<div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-		<Orb
-			hue={230}
-			hoverIntensity={0.3}
-			rotateOnHover={false}
-			forceHoverState={true}
-			class="h-full w-full opacity-20 dark:opacity-20"
-		/>
+		<div class="h-full w-full opacity-20 dark:opacity-20">
+			<Orb
+				hue={230}
+				hoverIntensity={0.3}
+				rotateOnHover={false}
+				forceHoverState={true}
+			/>
+		</div>
 		<div class="absolute inset-0 bg-gradient-to-b from-indigo-100/20 via-background/60 to-background dark:from-transparent dark:via-background/40"></div>
 	</div>
 
@@ -24,14 +25,14 @@
 		initial={{ opacity: 0, scale: 0.95 }}
 		whileInView={{ opacity: 1, scale: 1 }}
 		transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-		viewport={{ once: true, margin: "-100px" }}
+		inViewOptions={{ once: true, margin: "-100px" }}
 		class="mx-auto max-w-3xl text-center"
 	>
 		<motion.div
 			initial={{ opacity: 0, y: -10 }}
 			whileInView={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.3, delay: 0.1 }}
-			viewport={{ once: true }}
+			inViewOptions={{ once: true }}
 		>
 			<Badge variant="outline" class="mb-4 gap-1.5">
 				<Sparkles class="size-3" />
@@ -66,9 +67,9 @@
 			initial={{ opacity: 0, y: 10 }}
 			whileInView={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.4, delay: 0.2 }}
-			viewport={{ once: true }}
+			inViewOptions={{ once: true }}
 		>
-			<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+			<motion.div whileHover={{ scale: 1.05 }} whilePress={{ scale: 0.95 }}>
 				<Button size="lg" href={appPaths.discover} class="gap-2 px-8 text-base">
 					Enter App
 					<ArrowRight class="size-4" />

@@ -11,6 +11,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 interface ITreasury {
     function isContributor(address user) external view returns (bool);
 
+    function isContributorWithoutPendingContributions(address user) external view returns (bool);
+
     function getContributorCount() external view returns (uint256);
 
     function releaseFunds(address payable recipient, uint256 amount) external;
@@ -119,7 +121,7 @@ contract Governance is Ownable {
 
         require(proposal.state == ProposalState.Pending, "Proposal is not pending");
 
-        require(treasury.isContributor(msg.sender), "Not contributor");
+        require(treasury.isContributorWithoutPendingContributions(msg.sender), "Contributor has pending debt");
 
         require(!voted[_id][msg.sender], "Already voted");
 

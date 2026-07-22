@@ -161,7 +161,7 @@
 			<Crown class="text-primary size-6" />
 			Panel de gestión
 		</CardTitle>
-		<CardDescription class="text-base">
+		<CardDescription class="text-base flex items-center gap-1.5 flex-wrap">
 			Gestionando como dueño de {org.name}
 			<AddressDisplay address={userAddress} truncate class="bg-muted/50 rounded-md px-1.5 py-0.5 text-xs" />
 		</CardDescription>
@@ -178,7 +178,7 @@
 					Invitar nuevo miembro
 				</h3>
 				<p class="text-muted-foreground text-sm">
-					Registra al usuario en la organización y le asigna su primer compromiso de aporte.
+					Registra al usuario y le asigna su aporte inicial en **1 sola transacción atómica**.
 				</p>
 				<div class="space-y-3 mt-4">
 					<input
@@ -305,7 +305,7 @@
 										<p class="font-semibold text-foreground">{member.data?.fullName ?? "—"}</p>
 										<p class="text-muted-foreground text-xs mt-0.5">DNI {member.data?.dni ?? "—"}</p>
 									</td>
-									<td class="text-muted-foreground px-5 py-4 text-xs">
+									<td class="px-5 py-4 text-xs">
 										<AddressDisplay address={member.address} truncate />
 									</td>
 									<td class="px-5 py-4">{member.pendingContribution > 0n ? `${formatEther(member.pendingContribution)} ETH` : "—"}</td>

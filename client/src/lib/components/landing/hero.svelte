@@ -11,12 +11,13 @@
 
 <section class="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 pt-24">
 	<div class="pointer-events-none absolute inset-0 -z-10">
-		<Iridescence
-			color={[0.35, 0.45, 0.85]}
-			speed={0.6}
-			amplitude={0.15}
-			class="h-full w-full opacity-25 dark:opacity-30"
-		/>
+		<div class="h-full w-full opacity-25 dark:opacity-30">
+			<Iridescence
+				color={[0.35, 0.45, 0.85]}
+				speed={0.6}
+				amplitude={0.15}
+			/>
+		</div>
 		<div class="absolute inset-0 bg-gradient-to-b from-sky-100/30 via-background/50 to-background dark:from-transparent dark:via-background/30"></div>
 	</div>
 
@@ -85,7 +86,7 @@
 		transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
 		class="flex flex-wrap items-center justify-center gap-4"
 	>
-		<motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+		<motion.div whileHover={{ scale: 1.03 }} whilePress={{ scale: 0.97 }}>
 			<Button size="lg" href={appPaths.discover} class="gap-2 px-6 text-base">
 				Enter App
 				<ArrowRight class="size-4" />

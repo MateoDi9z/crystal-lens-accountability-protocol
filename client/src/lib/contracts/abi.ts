@@ -13,6 +13,7 @@ export const membershipAbi = parseAbi([
 
 	// Actions
 	"function mint(address to, (string dni, string fullName) memberData) external returns (uint256)",
+	"function registerContributor(address to, (string dni, string fullName) memberData, uint256 initialContribution) external returns (uint256)",
 	"function burn() external",
 
 	// Events

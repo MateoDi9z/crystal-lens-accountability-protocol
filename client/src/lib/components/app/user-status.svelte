@@ -7,7 +7,7 @@
 	import { formatEther } from "viem";
 	import type { UserStatus } from "$lib/contracts/types";
 	import { confirmTransaction, payPendingContribution } from "$lib/contracts/write";
-	import { refreshDashboard, runAction, getDashboardState } from "$lib/stores/dashboard.svelte";
+	import { refreshDashboard, refreshAllOrgsDashboard, runAction, getDashboardState } from "$lib/stores/dashboard.svelte";
 
 	let { user }: { user: UserStatus } = $props();
 	const dashboard = getDashboardState();
@@ -19,7 +19,10 @@
 				const hash = await payPendingContribution(user.pendingContribution);
 				await confirmTransaction(hash);
 			},
-			() => refreshDashboard(user.address)
+			async () => {
+				await refreshDashboard(user.address);
+				await refreshAllOrgsDashboard(user.address);
+			}
 		);
 	}
 
@@ -28,57 +31,59 @@
 	);
 </script>
 
-<Card>
+<Card class="border-border/50 shadow-md">
 	<CardHeader>
-		<CardTitle class="flex items-center gap-2 text-lg">
+		<CardTitle class="flex items-center gap-2 text-xl font-bold">
 			<Fingerprint class="text-primary size-5" />
-			My account
+			Mi Cuenta
 		</CardTitle>
 	</CardHeader>
 	<CardContent class="space-y-4">
-		<AddressDisplay address={user.address} class="text-sm" />
+		<div>
+			<AddressDisplay address={user.address} class="text-sm" />
+		</div>
 
 		<div class="flex flex-wrap gap-2">
 			<Badge variant={user.isMember ? "default" : "outline"}>
-				{user.isMember ? "Member" : "Not a member"}
+				{user.isMember ? "Miembro Activo" : "No es Miembro"}
 			</Badge>
 			<Badge variant={user.isContributor ? "secondary" : "outline"}>
-				{user.isContributor ? "Contributor" : "Not a contributor"}
+				{user.isContributor ? "Contribuyente" : "No Contribuyente"}
 			</Badge>
 			{#if user.isMember}
 				<Badge variant={user.isUpToDate ? "secondary" : "destructive"}>
-					{user.isUpToDate ? "Contributions up to date" : "Payment pending"}
+					{user.isUpToDate ? "Contribuciones al día" : "Pago pendiente"}
 				</Badge>
 			{/if}
 		</div>
 
 		{#if user.memberData}
-			<div class="bg-muted/50 rounded-xl p-4 text-sm">
-				<p><span class="text-muted-foreground">Name:</span> {user.memberData.fullName}</p>
-				<p class="mt-1"><span class="text-muted-foreground">DNI:</span> {user.memberData.dni}</p>
+			<div class="bg-muted/30 border border-border/50 rounded-xl p-4 text-sm space-y-1">
+				<p><span class="text-muted-foreground font-medium">Nombre Completo:</span> {user.memberData.fullName}</p>
+				<p><span class="text-muted-foreground font-medium">DNI:</span> {user.memberData.dni}</p>
 				{#if user.tokenId !== undefined}
-					<p class="mt-1"><span class="text-muted-foreground">Token ID:</span> {user.tokenId.toString()}</p>
+					<p><span class="text-muted-foreground font-medium">ID de Token (Soulbound NFT):</span> #{user.tokenId.toString()}</p>
 				{/if}
 			</div>
 		{/if}
 
 		<div class="grid gap-3 sm:grid-cols-2">
-			<div class="bg-muted/50 rounded-xl p-4">
-				<p class="text-muted-foreground text-xs uppercase tracking-wide">Pending</p>
-				<p class="text-lg font-semibold">{formatEther(user.pendingContribution)} ETH</p>
+			<div class="bg-muted/30 border border-border/50 rounded-xl p-4">
+				<p class="text-muted-foreground text-xs font-semibold uppercase tracking-wide">Deuda / Compromiso Pendiente</p>
+				<p class="text-xl font-bold text-foreground">{formatEther(user.pendingContribution)} ETH</p>
 			</div>
-			<div class="bg-muted/50 rounded-xl p-4">
-				<p class="text-muted-foreground text-xs uppercase tracking-wide">Total paid</p>
-				<p class="text-lg font-semibold">{formatEther(user.totalPaid)} ETH</p>
+			<div class="bg-muted/30 border border-border/50 rounded-xl p-4">
+				<p class="text-muted-foreground text-xs font-semibold uppercase tracking-wide">Total Aportado</p>
+				<p class="text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatEther(user.totalPaid)} ETH</p>
 			</div>
 		</div>
 
 		{#if canPay}
-			<Button class="gap-2" disabled={dashboard.actionLoading === "pay"} onclick={payContribution}>
+			<Button class="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md font-semibold" disabled={dashboard.actionLoading === "pay"} onclick={payContribution}>
 				{#if dashboard.actionLoading === "pay"}
 					<Loader2 class="size-4 animate-spin" />
 				{/if}
-				Pay {formatEther(user.pendingContribution)} ETH
+				Pagar {formatEther(user.pendingContribution)} ETH ahora
 			</Button>
 		{/if}
 	</CardContent>
