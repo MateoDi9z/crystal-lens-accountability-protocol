@@ -58,14 +58,18 @@ export function parseWalletError(error: unknown): string {
 	const message = resolveDisplayMessage(error);
 	const lower = message.toLowerCase();
 
+	if (
+		lower.includes("not an active member") ||
+		lower.includes("not a member") ||
+		lower.includes("only members")
+	) {
+		return "La cuenta ingresada no es un miembro activo de esta organización.";
+	}
 	if (lower.includes("already member") || lower.includes("already a member") || lower.includes("alreadycontributor")) {
 		return "Esta cuenta ya se encuentra registrada como miembro de la organización.";
 	}
 	if (lower.includes("ownableunauthorizedaccount") || lower.includes("unauthorizedaccount")) {
 		return "No tenés permisos de administrador para ejecutar esta acción.";
-	}
-	if (lower.includes("alreadycontributor") || lower.includes("already a contributor")) {
-		return "Esta cuenta ya se encuentra registrada como contribuyente.";
 	}
 	if (lower.includes("pendingdebtremaining") || lower.includes("pending debt")) {
 		return "No se puede realizar la acción porque hay un aporte o deuda pendiente sin saldar.";
@@ -88,9 +92,6 @@ export function parseWalletError(error: unknown): string {
 	if (lower.includes("not connected") || lower.includes("connector not connected")) {
 		return "No hay billetera conectada. Volvé a conectar tu billetera e intentá de nuevo.";
 	}
-	if (lower.includes("not a member") || lower.includes("only members")) {
-		return "Tu cuenta no está registrada como miembro de esta organización.";
-	}
 	if (lower.includes("amount is not the same") || lower.includes("pending contribution")) {
 		return "El monto ingresado no coincide con la contribución pendiente.";
 	}
@@ -106,7 +107,8 @@ export function parseWalletError(error: unknown): string {
 	if (lower.includes("execution reverted") || lower.includes("revert")) {
 		const revertMatch = message.match(/reason:\s*([^|]+)/i) || message.match(/revert:\s*([^|]+)/i);
 		if (revertMatch?.[1]) {
-			return `La transacción falló: ${revertMatch[1].trim()}`;
+			const cleanReason = revertMatch[1].split(/\.\s*Raw Call Arguments|Details:|Version:/i)[0].trim();
+			return `La transacción fue rechazada: ${cleanReason}`;
 		}
 		return "La transacción fue rechazada por el contrato inteligente.";
 	}

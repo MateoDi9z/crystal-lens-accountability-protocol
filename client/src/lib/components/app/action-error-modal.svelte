@@ -27,7 +27,7 @@
 
 <dialog
 	bind:this={dialog}
-	class="bg-background text-foreground m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-destructive/30 p-0 shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in-0 open:zoom-in-95"
+	class="bg-background text-foreground m-auto w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl border border-destructive/30 p-0 shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in-0 open:zoom-in-95"
 	onclick={handleBackdropClick}
 	oncancel={(event) => {
 		event.preventDefault();
@@ -49,11 +49,11 @@
 				<div class="bg-destructive/15 text-destructive rounded-full p-3 shrink-0">
 					<AlertTriangle class="size-6" />
 				</div>
-				<div class="space-y-1 pr-4">
+				<div class="space-y-1 pr-4 w-full">
 					<h3 class="text-lg font-bold tracking-tight">
 						{dashboard.actionError.title ?? "Atención"}
 					</h3>
-					<p class="text-muted-foreground text-sm leading-relaxed">
+					<p class="text-muted-foreground text-sm leading-relaxed break-words bg-destructive/5 p-3 rounded-xl border border-destructive/20 mt-2">
 						{dashboard.actionError.message}
 					</p>
 				</div>

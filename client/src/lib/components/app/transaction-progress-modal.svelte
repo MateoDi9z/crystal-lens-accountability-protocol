@@ -30,7 +30,7 @@
 
 <dialog
 	bind:this={dialog}
-	class="bg-background text-foreground m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-border/60 p-0 shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-md open:animate-in open:fade-in-0 open:zoom-in-95"
+	class="bg-background text-foreground m-auto w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl border border-border/60 p-0 shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-md open:animate-in open:fade-in-0 open:zoom-in-95"
 	onclick={handleBackdropClick}
 	oncancel={(event) => {
 		event.preventDefault();
@@ -85,34 +85,34 @@
 							<Loader2 class="size-4 animate-spin text-primary" />
 						</div>
 					</div>
-					<div class="space-y-1">
+					<div class="space-y-1 w-full">
 						<h3 class="text-xl font-bold tracking-tight">{tx.title ?? "Confirmación en billetera"}</h3>
-						<p class="text-muted-foreground text-sm leading-relaxed">{tx.message ?? "Confirmá la transacción en tu billetera..."}</p>
+						<p class="text-muted-foreground text-sm leading-relaxed break-words">{tx.message ?? "Confirmá la transacción en tu billetera..."}</p>
 					</div>
 				{:else if tx.phase === "processing"}
 					<div class="relative flex size-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 dark:text-amber-400">
 						<Loader2 class="size-8 animate-spin" />
 					</div>
-					<div class="space-y-1">
+					<div class="space-y-1 w-full">
 						<h3 class="text-xl font-bold tracking-tight">{tx.title ?? "Procesando transacción"}</h3>
-						<p class="text-muted-foreground text-sm leading-relaxed">{tx.message ?? "Esperando confirmación en la blockchain..."}</p>
+						<p class="text-muted-foreground text-sm leading-relaxed break-words">{tx.message ?? "Esperando confirmación en la blockchain..."}</p>
 					</div>
 				{:else if tx.phase === "success"}
 					<div class="relative flex size-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 dark:text-emerald-400">
 						<CheckCircle2 class="size-8 animate-in zoom-in-50" />
 						<Sparkles class="absolute -right-1 -top-1 size-5 text-amber-400 animate-pulse" />
 					</div>
-					<div class="space-y-1">
+					<div class="space-y-1 w-full">
 						<h3 class="text-xl font-bold tracking-tight text-foreground">{tx.title ?? "¡Transacción completada!"}</h3>
-						<p class="text-muted-foreground text-sm leading-relaxed">{tx.message ?? "La operación fue registrada exitosamente."}</p>
+						<p class="text-muted-foreground text-sm leading-relaxed break-words">{tx.message ?? "La operación fue registrada exitosamente."}</p>
 					</div>
 				{:else if tx.phase === "error"}
 					<div class="flex size-16 items-center justify-center rounded-full bg-destructive/15 text-destructive">
 						<AlertTriangle class="size-8 animate-in zoom-in-50" />
 					</div>
-					<div class="space-y-1">
+					<div class="space-y-1 w-full">
 						<h3 class="text-xl font-bold tracking-tight text-destructive">{tx.title ?? "No se pudo realizar la transacción"}</h3>
-						<p class="text-muted-foreground text-sm leading-relaxed">{tx.message}</p>
+						<p class="text-muted-foreground text-sm leading-relaxed break-words bg-destructive/5 p-3 rounded-xl border border-destructive/20 text-left">{tx.message}</p>
 					</div>
 				{/if}
 			</div>
