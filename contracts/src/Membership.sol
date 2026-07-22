@@ -100,11 +100,12 @@ contract Membership is ERC721, Ownable {
         return _mintMemberInternal(to, memberData);
     }
 
-    function registerContributor(
-        address to,
-        MemberData calldata memberData,
-        uint256 initialContribution
-    ) external onlyOwner whenTreasurySet returns (uint256) {
+    function registerContributor(address to, MemberData calldata memberData, uint256 initialContribution)
+        external
+        onlyOwner
+        whenTreasurySet
+        returns (uint256)
+    {
         uint256 tokenId = _mintMemberInternal(to, memberData);
         if (initialContribution > 0) {
             treasury.requestContribution(to, initialContribution);

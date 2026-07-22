@@ -10,22 +10,18 @@ contract DeploySingleOrgScript is Script {
     function run() public {
         address targetOwner = vm.envOr("DEPLOY_ORG_OWNER", address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266));
         address deployer = msg.sender;
-        
+
         vm.startBroadcast();
-        
+
         Membership membership = new Membership("Organizacion Local CLAP", "CLAP-LOCAL", deployer);
         Treasury treasury = new Treasury(address(membership), deployer);
         Governance governance = new Governance(address(treasury), deployer);
-        
+
         membership.setTreasury(address(treasury));
         treasury.setGovernance(address(governance));
 
         address testMember = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-        membership.registerContributor(
-            testMember,
-            MemberData("12345678", "Juan Perez"),
-            0.5 ether
-        );
+        membership.registerContributor(testMember, MemberData("12345678", "Juan Perez"), 0.5 ether);
 
         if (targetOwner != deployer) {
             membership.transferOwnership(targetOwner);
@@ -34,7 +30,7 @@ contract DeploySingleOrgScript is Script {
         }
 
         vm.stopBroadcast();
-        
+
         console2.log("\n====================================");
         console2.log(unicode"🚀 DESPLIEGUE LOCAL EN ANVIL EXITOSO");
         console2.log("====================================");

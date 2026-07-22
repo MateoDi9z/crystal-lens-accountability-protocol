@@ -289,7 +289,7 @@
 			<div class="space-y-4 rounded-2xl border border-border/50 bg-card/50 p-5 shadow-sm hover:shadow-md transition-shadow">
 				<h3 class="flex items-center gap-2 font-bold text-lg">
 					<UserPlus class="text-primary size-5" />
-					Invitar nuevo miembro
+					Registrar a un nuevo miembro
 				</h3>
 				<p class="text-muted-foreground text-sm">
 					Registra al usuario, se le asigna una contribucion automaticamente.
