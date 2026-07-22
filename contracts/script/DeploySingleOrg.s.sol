@@ -20,9 +20,6 @@ contract DeploySingleOrgScript is Script {
         membership.setTreasury(address(treasury));
         treasury.setGovernance(address(governance));
 
-        address testMember = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-        membership.registerContributor(testMember, MemberData("12345678", "Juan Perez"), 0.5 ether);
-
         if (targetOwner != deployer) {
             membership.transferOwnership(targetOwner);
             treasury.transferOwnership(targetOwner);
@@ -32,10 +29,9 @@ contract DeploySingleOrgScript is Script {
         vm.stopBroadcast();
 
         console2.log("\n====================================");
-        console2.log(unicode"🚀 DESPLIEGUE LOCAL EN ANVIL EXITOSO");
+        console2.log("DESPLIEGUE LOCAL EN ANVIL EXITOSO");
         console2.log("====================================");
         console2.log("Owner / Admin (Tu Wallet) ->", targetOwner);
-        console2.log("Miembro de Prueba (Cuenta #1 Anvil) ->", testMember);
         console2.log("- MEMBERSHIP  ->", address(membership));
         console2.log("- TREASURY    ->", address(treasury));
         console2.log("- GOVERNANCE  ->", address(governance));

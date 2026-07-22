@@ -5,7 +5,7 @@
 param (
     [string]$PrivateKey,
     [string]$TargetOwner = "0xB36E0A34B6921eB5c9B87e4AC963C557E8e6741b",
-    [string]$RpcUrl = "https://rpc.ankr.com/eth_sepolia"
+    [string]$RpcUrl = "https://rpc.ankr.com/eth_sepolia/deb47ce65affded1cbab3f99751ac28100ca1cd88b40951ac8631037f02ca441"
 )
 
 if ([string]::IsNullOrWhiteSpace($PrivateKey)) {
