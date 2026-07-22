@@ -6,24 +6,42 @@
 	import { Fingerprint, Loader2 } from "@lucide/svelte";
 	import { formatEther } from "viem";
 	import type { UserStatus } from "$lib/contracts/types";
-	import { confirmTransaction, payPendingContribution } from "$lib/contracts/write";
-	import { refreshDashboard, refreshAllOrgsDashboard, runAction, getDashboardState } from "$lib/stores/dashboard.svelte";
+	import {
+		refreshDashboard,
+		refreshAllOrgsDashboard,
+		getActiveOrg,
+		runPayment,
+		getDashboardState
+	} from "$lib/stores/dashboard.svelte";
+	import CheckoutTicketModal from "$lib/components/app/checkout-ticket-modal.svelte";
+	import { resolveOrgAddresses } from "$lib/contracts/read";
+	import type { Address } from "viem";
 
 	let { user }: { user: UserStatus } = $props();
 	const dashboard = getDashboardState();
 
-	async function payContribution() {
-		await runAction(
-			"pay",
-			async () => {
-				const hash = await payPendingContribution(user.pendingContribution);
-				await confirmTransaction(hash);
-			},
-			async () => {
-				await refreshDashboard(user.address);
-				await refreshAllOrgsDashboard(user.address);
+	let isModalOpen = $state(false);
+	let targetTreasury = $state<Address | null>(null);
+
+	async function openPayModal() {
+		const org = getActiveOrg();
+		if (org) {
+			try {
+				const { treasury } = await resolveOrgAddresses(org);
+				targetTreasury = treasury;
+			} catch {
+				targetTreasury = null;
 			}
-		);
+		}
+		isModalOpen = true;
+	}
+
+	async function confirmPay() {
+		const org = getActiveOrg();
+		if (!org) return;
+		await runPayment(org, user.pendingContribution);
+		await refreshDashboard(user.address);
+		await refreshAllOrgsDashboard(user.address);
 	}
 
 	const canPay = $derived(
@@ -79,7 +97,7 @@
 		</div>
 
 		{#if canPay}
-			<Button class="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md font-semibold" disabled={dashboard.actionLoading === "pay"} onclick={payContribution}>
+			<Button class="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md font-semibold" disabled={dashboard.actionLoading === "pay"} onclick={openPayModal}>
 				{#if dashboard.actionLoading === "pay"}
 					<Loader2 class="size-4 animate-spin" />
 				{/if}
@@ -88,3 +106,19 @@
 		{/if}
 	</CardContent>
 </Card>
+
+{#if canPay && getActiveOrg()}
+	<CheckoutTicketModal
+		bind:open={isModalOpen}
+		title="Confirmar Aporte"
+		subtitle="Estás por abonar tu contribución pendiente"
+		targetLabel="Tesorería de destino"
+		targetAddress={targetTreasury}
+		amountEth={formatEther(user.pendingContribution)}
+		details={[
+			{ label: "Organización", value: getActiveOrg()?.name ?? "Organización" }
+		]}
+		confirmText="Confirmar y Pagar"
+		onconfirm={confirmPay}
+	/>
+{/if}

@@ -18,6 +18,8 @@
 		getDashboardState
 	} from "$lib/stores/dashboard.svelte";
 	import type { OrgConfig } from "$lib/config/orgs";
+	import CheckoutTicketModal, { type TicketDetail } from "$lib/components/app/checkout-ticket-modal.svelte";
+	import { resolveOrgAddresses, type ResolvedOrgAddresses } from "$lib/contracts/read";
 
 	let {
 		org,
@@ -32,6 +34,22 @@
 	} = $props();
 
 	const dashboard = getDashboardState();
+
+	let resolvedAddresses = $state<ResolvedOrgAddresses | null>(null);
+	$effect(() => {
+		resolveOrgAddresses(org).then((res) => (resolvedAddresses = res)).catch(() => {});
+	});
+
+	let ticketModalOpen = $state(false);
+	let ticketConfig = $state<{
+		title: string;
+		subtitle: string;
+		targetLabel: string;
+		targetAddress: Address | null;
+		amountEth?: string | null;
+		details: TicketDetail[];
+		onconfirm: () => void;
+	} | null>(null);
 
 	let wallet = $state("");
 	let dni = $state("");
@@ -51,15 +69,15 @@
 		return value as Address;
 	}
 
-	async function handleRegister() {
+	function prepareRegister() {
 		formError = null;
 		const to = validateAddress(wallet.trim());
 		if (!to) {
-			formError = "Invalid wallet address";
+			formError = "Dirección de billetera inválida";
 			return;
 		}
 		if (!dni.trim() || !fullName.trim()) {
-			formError = "DNI and full name are required";
+			formError = "DNI y nombre completo son requeridos";
 			return;
 		}
 
@@ -67,18 +85,42 @@
 		try {
 			amount = parseEther(contributionEth);
 		} catch {
-			formError = "Invalid contribution amount";
+			formError = "Monto de contribución inválido";
 			return;
 		}
 		if (amount <= 0n) {
-			formError = "Contribution must be greater than 0";
+			formError = "La contribución debe ser mayor a 0";
 			return;
 		}
+
+		ticketConfig = {
+			title: "Confirmar Registro de Miembro",
+			subtitle: "Registra al usuario, se le asigna una contribución automáticamente.",
+			targetLabel: "Contrato de Membresía",
+			targetAddress: resolvedAddresses?.membership ?? null,
+			amountEth: contributionEth,
+			details: [
+				{ label: "Cuenta del miembro", value: to, isAddress: true },
+				{ label: "Nombre completo", value: fullName.trim() },
+				{ label: "DNI", value: dni.trim() }
+			],
+			onconfirm: handleRegister
+		};
+		ticketModalOpen = true;
+	}
+
+	async function handleRegister() {
+		const to = validateAddress(wallet.trim())!;
+		const amount = parseEther(contributionEth);
 
 		await runAction(
 			`register-contributor-${org.slug}`,
 			() => registerContributor(to, dni.trim(), fullName.trim(), amount, org),
-			() => refreshAllOrgsDashboard(userAddress)
+			() => refreshAllOrgsDashboard(userAddress),
+			{
+				title: "Registro de Miembro Completado",
+				successMessage: "El nuevo miembro y su aporte fueron registrados en la blockchain."
+			}
 		);
 
 		wallet = "";
@@ -87,11 +129,11 @@
 		contributionEth = "1";
 	}
 
-	async function handleRequestDebt() {
+	function prepareRequestDebt() {
 		formError = null;
 		const contributor = validateAddress(existingWallet.trim());
 		if (!contributor) {
-			formError = "Invalid wallet address";
+			formError = "Dirección de billetera inválida";
 			return;
 		}
 
@@ -99,28 +141,50 @@
 		try {
 			amount = parseEther(additionalDebtEth);
 		} catch {
-			formError = "Invalid debt amount";
+			formError = "Monto de solicitud inválido";
 			return;
 		}
 		if (amount <= 0n) {
-			formError = "Debt amount must be greater than 0";
+			formError = "El monto solicitado debe ser mayor a 0";
 			return;
 		}
+
+		ticketConfig = {
+			title: "Confirmar Solicitud de Aporte",
+			subtitle: "Pide un nuevo compromiso de contribución a un miembro activo",
+			targetLabel: "Contrato de Tesorería",
+			targetAddress: resolvedAddresses?.treasury ?? null,
+			amountEth: additionalDebtEth,
+			details: [
+				{ label: "Cuenta del miembro", value: contributor, isAddress: true }
+			],
+			onconfirm: handleRequestDebt
+		};
+		ticketModalOpen = true;
+	}
+
+	async function handleRequestDebt() {
+		const contributor = validateAddress(existingWallet.trim())!;
+		const amount = parseEther(additionalDebtEth);
 
 		await runAction(
 			`request-debt-${org.slug}`,
 			() => requestContribution(contributor, amount, org),
-			() => refreshAllOrgsDashboard(userAddress)
+			() => refreshAllOrgsDashboard(userAddress),
+			{
+				title: "Solicitud Registrada",
+				successMessage: "El nuevo compromiso de aporte fue enviado a la tesorería."
+			}
 		);
 
 		existingWallet = "";
 		additionalDebtEth = "0.5";
 	}
 
-	async function handleCreateProposal() {
+	function prepareCreateProposal() {
 		formError = null;
 		if (!proposalDescription.trim()) {
-			formError = "Proposal description is required";
+			formError = "La descripción de la propuesta es requerida";
 			return;
 		}
 
@@ -128,18 +192,39 @@
 		try {
 			amount = parseEther(proposalAmountEth);
 		} catch {
-			formError = "Invalid proposal amount";
+			formError = "Monto de propuesta inválido";
 			return;
 		}
 		if (amount <= 0n) {
-			formError = "Proposal amount must be greater than 0";
+			formError = "El monto solicitado debe ser mayor a 0";
 			return;
 		}
+
+		ticketConfig = {
+			title: "Confirmar Nueva Propuesta",
+			subtitle: "Publica una propuesta para la votación de la comunidad",
+			targetLabel: "Contrato de Gobernanza",
+			targetAddress: resolvedAddresses?.governance ?? null,
+			amountEth: proposalAmountEth,
+			details: [
+				{ label: "Descripción", value: proposalDescription.trim() }
+			],
+			onconfirm: handleCreateProposal
+		};
+		ticketModalOpen = true;
+	}
+
+	async function handleCreateProposal() {
+		const amount = parseEther(proposalAmountEth);
 
 		await runAction(
 			`create-proposal-${org.slug}`,
 			() => createProposal(proposalDescription.trim(), amount, org),
-			() => refreshAllOrgsDashboard(userAddress)
+			() => refreshAllOrgsDashboard(userAddress),
+			{
+				title: "Propuesta Creada",
+				successMessage: "La propuesta fue publicada on-chain para votación de la comunidad."
+			}
 		);
 
 		proposalDescription = "";
@@ -206,7 +291,7 @@
 					<Button
 						class="w-full gap-2 mt-2 bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 shadow-md"
 						disabled={dashboard.actionLoading === `register-contributor-${org.slug}`}
-						onclick={handleRegister}
+						onclick={prepareRegister}
 					>
 						{#if dashboard.actionLoading === `register-contributor-${org.slug}`}
 							<Loader2 class="size-4 animate-spin" />
@@ -239,7 +324,7 @@
 						variant="outline"
 						class="w-full gap-2 mt-2 border-primary/20 hover:bg-primary/5 text-primary"
 						disabled={dashboard.actionLoading === `request-debt-${org.slug}`}
-						onclick={handleRequestDebt}
+						onclick={prepareRequestDebt}
 					>
 						{#if dashboard.actionLoading === `request-debt-${org.slug}`}
 							<Loader2 class="size-4 animate-spin" />
@@ -268,7 +353,7 @@
 				/>
 				<Button
 					disabled={dashboard.actionLoading === `create-proposal-${org.slug}`}
-					onclick={handleCreateProposal}
+					onclick={prepareCreateProposal}
 				>
 					{#if dashboard.actionLoading === `create-proposal-${org.slug}`}
 						<Loader2 class="size-4 animate-spin" />
@@ -326,3 +411,17 @@
 	</CardContent>
 	</div>
 </Card>
+
+{#if ticketConfig}
+	<CheckoutTicketModal
+		bind:open={ticketModalOpen}
+		title={ticketConfig.title}
+		subtitle={ticketConfig.subtitle}
+		targetLabel={ticketConfig.targetLabel}
+		targetAddress={ticketConfig.targetAddress}
+		amountEth={ticketConfig.amountEth}
+		details={ticketConfig.details}
+		confirmText="Confirmar en Billetera"
+		onconfirm={ticketConfig.onconfirm}
+	/>
+{/if}

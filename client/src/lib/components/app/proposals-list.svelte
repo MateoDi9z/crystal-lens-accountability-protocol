@@ -9,6 +9,11 @@
 	import { executeProposal, voteOnProposal } from "$lib/contracts/write";
 	import { refreshDashboard, refreshAllOrgsDashboard, runAction, getDashboardState } from "$lib/stores/dashboard.svelte";
 
+	import CheckoutTicketModal, { type TicketDetail } from "$lib/components/app/checkout-ticket-modal.svelte";
+	import { resolveOrgAddresses } from "$lib/contracts/read";
+	import { getActiveOrg } from "$lib/stores/dashboard.svelte";
+	import type { Address } from "viem";
+
 	let {
 		proposals,
 		user,
@@ -23,6 +28,17 @@
 
 	const dashboard = getDashboardState();
 
+	let ticketModalOpen = $state(false);
+	let ticketConfig = $state<{
+		title: string;
+		subtitle: string;
+		targetLabel: string;
+		targetAddress: Address | null;
+		amountEth?: string | null;
+		details: TicketDetail[];
+		onconfirm: () => void;
+	} | null>(null);
+
 	function stateVariant(state: Proposal["state"]) {
 		switch (state) {
 			case ProposalState.Approved:
@@ -36,6 +52,31 @@
 		}
 	}
 
+	async function prepareVote(id: bigint, support: boolean) {
+		if (!user) return;
+		const org = getActiveOrg();
+		let govAddr: Address | null = null;
+		if (org) {
+			try {
+				const { governance } = await resolveOrgAddresses(org);
+				govAddr = governance;
+			} catch {}
+		}
+
+		ticketConfig = {
+			title: "Confirmar Voto",
+			subtitle: "Registra tu voto on-chain para esta propuesta de gobernanza",
+			targetLabel: "Contrato de Gobernanza",
+			targetAddress: govAddr,
+			details: [
+				{ label: "Propuesta", value: `#${id.toString()}` },
+				{ label: "Tu Voto", value: support ? "A Favor" : "En Contra" }
+			],
+			onconfirm: () => vote(id, support)
+		};
+		ticketModalOpen = true;
+	}
+
 	async function vote(id: bigint, support: boolean) {
 		if (!user) return;
 		await runAction(
@@ -44,8 +85,37 @@
 			async () => {
 				await refreshDashboard(user.address);
 				await refreshAllOrgsDashboard(user.address);
+			},
+			{
+				title: "Voto Registrado",
+				successMessage: `Tu voto ${support ? "a favor" : "en contra"} fue contabilizado on-chain.`
 			}
 		);
+	}
+
+	async function prepareExecute(proposal: Proposal) {
+		const org = getActiveOrg();
+		let govAddr: Address | null = null;
+		if (org) {
+			try {
+				const { governance } = await resolveOrgAddresses(org);
+				govAddr = governance;
+			} catch {}
+		}
+
+		ticketConfig = {
+			title: "Confirmar Liberación de Fondos",
+			subtitle: "Transfiere los fondos aprobados desde la tesorería de la organización",
+			targetLabel: "Contrato de Gobernanza",
+			targetAddress: govAddr,
+			amountEth: formatEther(proposal.amount),
+			details: [
+				{ label: "Propuesta", value: `#${proposal.id.toString()}` },
+				{ label: "Proponente / Destino", value: proposal.proposer, isAddress: true }
+			],
+			onconfirm: () => execute(proposal.id)
+		};
+		ticketModalOpen = true;
 	}
 
 	async function execute(id: bigint) {
@@ -60,6 +130,10 @@
 					await refreshDashboard();
 					await refreshAllOrgsDashboard();
 				}
+			},
+			{
+				title: "Fondos Liberados",
+				successMessage: "La tesorería transfirió exitosamente los fondos aprobados."
 			}
 		);
 	}
@@ -117,7 +191,7 @@
 							<Button
 								size="sm"
 								disabled={dashboard.actionLoading === `vote-${proposal.id}-true`}
-								onclick={() => vote(proposal.id, true)}
+								onclick={() => prepareVote(proposal.id, true)}
 							>
 								{#if dashboard.actionLoading === `vote-${proposal.id}-true`}
 									<Loader2 class="size-3.5 animate-spin" />
@@ -128,7 +202,7 @@
 								size="sm"
 								variant="outline"
 								disabled={dashboard.actionLoading === `vote-${proposal.id}-false`}
-								onclick={() => vote(proposal.id, false)}
+								onclick={() => prepareVote(proposal.id, false)}
 							>
 								{#if dashboard.actionLoading === `vote-${proposal.id}-false`}
 									<Loader2 class="size-3.5 animate-spin" />
@@ -154,7 +228,7 @@
 									size="sm"
 									class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm gap-1.5"
 									disabled={dashboard.actionLoading === `execute-${proposal.id}`}
-									onclick={() => execute(proposal.id)}
+									onclick={() => prepareExecute(proposal)}
 								>
 									{#if dashboard.actionLoading === `execute-${proposal.id}`}
 										<Loader2 class="size-3.5 animate-spin" />
@@ -172,3 +246,17 @@
 		{/if}
 	</CardContent>
 </Card>
+
+{#if ticketConfig}
+	<CheckoutTicketModal
+		bind:open={ticketModalOpen}
+		title={ticketConfig.title}
+		subtitle={ticketConfig.subtitle}
+		targetLabel={ticketConfig.targetLabel}
+		targetAddress={ticketConfig.targetAddress}
+		amountEth={ticketConfig.amountEth}
+		details={ticketConfig.details}
+		confirmText="Confirmar en Billetera"
+		onconfirm={ticketConfig.onconfirm}
+	/>
+{/if}

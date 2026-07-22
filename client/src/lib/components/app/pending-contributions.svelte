@@ -10,14 +10,34 @@
 		runPayment,
 		clearPaymentFeedback
 	} from "$lib/stores/dashboard.svelte";
+	import CheckoutTicketModal from "$lib/components/app/checkout-ticket-modal.svelte";
+	import { resolveOrgAddresses } from "$lib/contracts/read";
+	import type { OrgConfig } from "$lib/config/orgs";
+	import type { Address } from "viem";
 
 	const dashboard = getDashboardState();
 
-	function pay(orgSlug: string, amount: bigint) {
-		const entry = dashboard.pendingOrgs.find((item) => item.org.slug === orgSlug);
-		if (!entry) return;
-		clearPaymentFeedback(orgSlug);
-		runPayment(entry.org, amount);
+	let isModalOpen = $state(false);
+	let selectedOrg = $state<OrgConfig | null>(null);
+	let selectedAmount = $state<bigint>(0n);
+	let targetTreasury = $state<Address | null>(null);
+
+	async function openPayModal(org: OrgConfig, amount: bigint) {
+		selectedOrg = org;
+		selectedAmount = amount;
+		try {
+			const { treasury } = await resolveOrgAddresses(org);
+			targetTreasury = treasury;
+		} catch {
+			targetTreasury = null;
+		}
+		isModalOpen = true;
+	}
+
+	function confirmPay() {
+		if (!selectedOrg) return;
+		clearPaymentFeedback(selectedOrg.slug);
+		runPayment(selectedOrg, selectedAmount);
 	}
 </script>
 
@@ -80,7 +100,7 @@
 						size="lg"
 						class="h-12 w-full gap-2 text-base font-semibold sm:w-auto sm:min-w-[280px] bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 transition-opacity shadow-md"
 						disabled={isPaying || feedback?.phase === "success"}
-						onclick={() => pay(entry.org.slug, entry.userStatus.pendingContribution)}
+						onclick={() => openPayModal(entry.org, entry.userStatus.pendingContribution)}
 					>
 						{#if isPaying}
 							<Loader2 class="size-5 animate-spin" />
@@ -92,3 +112,19 @@
 		{/if}
 	</CardContent>
 </Card>
+
+{#if selectedOrg}
+	<CheckoutTicketModal
+		bind:open={isModalOpen}
+		title="Confirmar Aporte"
+		subtitle="Estás por abonar tu contribución pendiente a la organización"
+		targetLabel="Tesorería de destino"
+		targetAddress={targetTreasury}
+		amountEth={formatEther(selectedAmount)}
+		details={[
+			{ label: "Organización", value: selectedOrg.name }
+		]}
+		confirmText="Confirmar y Pagar"
+		onconfirm={confirmPay}
+	/>
+{/if}
