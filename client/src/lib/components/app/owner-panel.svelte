@@ -19,7 +19,8 @@
 	} from "$lib/stores/dashboard.svelte";
 	import type { OrgConfig } from "$lib/config/orgs";
 	import CheckoutTicketModal, { type TicketDetail } from "$lib/components/app/checkout-ticket-modal.svelte";
-	import { resolveOrgAddresses, type ResolvedOrgAddresses } from "$lib/contracts/read";
+	import { resolveOrgAddresses, getTreasuryOverview, type ResolvedOrgAddresses } from "$lib/contracts/read";
+	import type { TreasuryOverview } from "$lib/contracts/types";
 
 	let {
 		org,
@@ -36,8 +37,11 @@
 	const dashboard = getDashboardState();
 
 	let resolvedAddresses = $state<ResolvedOrgAddresses | null>(null);
+	let treasuryStats = $state<TreasuryOverview | null>(null);
+
 	$effect(() => {
 		resolveOrgAddresses(org).then((res) => (resolvedAddresses = res)).catch(() => {});
+		getTreasuryOverview(org).then((res) => (treasuryStats = res)).catch(() => {});
 	});
 
 	let ticketModalOpen = $state(false);
@@ -252,6 +256,31 @@
 		</CardDescription>
 	</CardHeader>
 	<CardContent class="grid gap-8">
+		<!-- Métricas de Tesorería de la Organización -->
+		<div class="grid gap-4 sm:grid-cols-3">
+			<div class="bg-card/70 border border-border/60 rounded-2xl p-5 shadow-sm space-y-1">
+				<p class="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Balance en Tesorería</p>
+				<p class="text-3xl font-extrabold text-primary tracking-tight">
+					{treasuryStats ? `${formatEther(treasuryStats.balance)} ETH` : "—"}
+				</p>
+				<p class="text-muted-foreground text-xs">Fondos líquidos disponibles</p>
+			</div>
+			<div class="bg-card/70 border border-border/60 rounded-2xl p-5 shadow-sm space-y-1">
+				<p class="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Total Recaudado Histórico</p>
+				<p class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+					{treasuryStats ? `${formatEther(treasuryStats.totalFunds)} ETH` : "—"}
+				</p>
+				<p class="text-muted-foreground text-xs">Aportes acumulados recibidos</p>
+			</div>
+			<div class="bg-card/70 border border-border/60 rounded-2xl p-5 shadow-sm space-y-1">
+				<p class="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Miembros Registrados</p>
+				<p class="text-3xl font-extrabold text-foreground tracking-tight">
+					{members.length.toString()}
+				</p>
+				<p class="text-muted-foreground text-xs">Contribuyentes de {org.name}</p>
+			</div>
+		</div>
+
 		{#if formError}
 			<p class="text-destructive text-sm">{formError}</p>
 		{/if}
