@@ -38,14 +38,28 @@
 			</div>
 			<p class="text-2xl font-bold text-foreground">{treasury.contributorCount.toString()}</p>
 		</div>
-		<div class="bg-muted/30 border border-border/50 rounded-xl p-4 text-sm space-y-2">
-			<div>
-				<p class="text-muted-foreground mb-0.5 text-xs font-semibold uppercase tracking-wide">Gobernanza</p>
-				<AddressDisplay address={treasury.governance} truncate class="text-sm" />
-			</div>
-			<div>
-				<p class="text-muted-foreground mb-0.5 text-xs font-semibold uppercase tracking-wide">Propietario / Dueño</p>
-				<AddressDisplay address={treasury.owner} truncate class="text-sm" />
+		<div class="bg-muted/30 border border-border/50 rounded-xl p-4 text-sm col-span-full sm:col-span-2">
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+				<div>
+					<p class="text-muted-foreground mb-0.5 text-xs font-semibold uppercase tracking-wide">Gobernanza</p>
+					<AddressDisplay address={treasury.governance} truncate class="text-sm" />
+				</div>
+				{#if treasury.treasury}
+					<div>
+						<p class="text-muted-foreground mb-0.5 text-xs font-semibold uppercase tracking-wide">Tesorería</p>
+						<AddressDisplay address={treasury.treasury} truncate class="text-sm" />
+					</div>
+				{/if}
+				{#if treasury.membership}
+					<div>
+						<p class="text-muted-foreground mb-0.5 text-xs font-semibold uppercase tracking-wide">Membresía</p>
+						<AddressDisplay address={treasury.membership} truncate class="text-sm" />
+					</div>
+				{/if}
+				<div>
+					<p class="text-muted-foreground mb-0.5 text-xs font-semibold uppercase tracking-wide">Propietario / Dueño</p>
+					<AddressDisplay address={treasury.owner} truncate class="text-sm" />
+				</div>
 			</div>
 		</div>
 	</CardContent>

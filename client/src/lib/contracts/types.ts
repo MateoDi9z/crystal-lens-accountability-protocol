@@ -17,6 +17,8 @@ export interface TreasuryOverview {
 	contributorCount: bigint;
 	governance: Address;
 	owner: Address;
+	treasury?: Address;
+	membership?: Address;
 }
 
 export interface Member {

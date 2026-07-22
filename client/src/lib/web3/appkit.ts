@@ -1,6 +1,6 @@
 import { browser } from "$app/environment";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { sepolia } from "@reown/appkit/networks";
+import { sepolia, anvil, type AppKitNetwork } from "@reown/appkit/networks";
 import { createAppKit } from "@reown/appkit";
 import type { AppKit } from "@reown/appkit";
 import type { Config } from "@wagmi/core";
@@ -14,7 +14,10 @@ export function isReownConfigured(): boolean {
 
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID?.trim() || PLACEHOLDER_PROJECT_ID;
 
-export const networks: [typeof sepolia, ...typeof sepolia[]] = [sepolia];
+const targetChainId = Number(import.meta.env.VITE_CHAIN_ID || 11155111);
+const defaultTargetNetwork = targetChainId === 31337 ? anvil : sepolia;
+
+export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [sepolia, anvil];
 
 let wagmiAdapter: WagmiAdapter | undefined;
 let wagmiConfig: Config | undefined;
@@ -48,7 +51,7 @@ function createWeb3() {
 		networks,
 		projectId,
 		metadata,
-		defaultNetwork: sepolia,
+		defaultNetwork: defaultTargetNetwork,
 		showWallets: true,
 		enableEIP6963: true,
 		enableInjected: true,

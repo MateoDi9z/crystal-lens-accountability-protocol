@@ -1,9 +1,10 @@
-import { sepolia as appkitSepolia } from "@reown/appkit/networks";
+import { sepolia as appkitSepolia, anvil as appkitAnvil } from "@reown/appkit/networks";
 import { getAccount } from "@wagmi/core";
 import type { GetAccountReturnType } from "@wagmi/core";
 import { getAppKit, getWagmiConfig } from "./appkit";
 
 export const SEPOLIA_CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || 11155111);
+const activeTargetNetwork = SEPOLIA_CHAIN_ID === 31337 ? appkitAnvil : appkitSepolia;
 
 export async function ensureSepoliaForWrite(): Promise<GetAccountReturnType> {
 	const config = getWagmiConfig();
@@ -18,7 +19,7 @@ export async function ensureSepoliaForWrite(): Promise<GetAccountReturnType> {
 		throw new Error("Web3 no inicializado. Recargá la página e intentá de nuevo.");
 	}
 
-	await kit.switchNetwork(appkitSepolia, { throwOnFailure: true });
+	await kit.switchNetwork(activeTargetNetwork, { throwOnFailure: true });
 
 	for (let attempt = 0; attempt < 10; attempt++) {
 		const updated = getAccount(config);

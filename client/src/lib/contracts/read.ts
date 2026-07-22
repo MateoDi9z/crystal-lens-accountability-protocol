@@ -35,7 +35,7 @@ export async function resolveOrgAddresses(org: OrgConfig): Promise<ResolvedOrgAd
 }
 
 export async function getTreasuryOverview(org: OrgConfig): Promise<TreasuryOverview> {
-	const { governance, treasury } = await resolveOrgAddresses(org);
+	const { governance, treasury, membership } = await resolveOrgAddresses(org);
 
 	const [totalFunds, contributorCount, contractGov, owner, balance] = await Promise.all([
 		publicClient.readContract({
@@ -67,8 +67,10 @@ export async function getTreasuryOverview(org: OrgConfig): Promise<TreasuryOverv
 		totalFunds,
 		balance,
 		contributorCount,
-		governance: contractGov,
-		owner
+		governance,
+		owner,
+		treasury,
+		membership
 	};
 }
 
