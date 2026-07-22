@@ -21,7 +21,7 @@ const DEFAULT_ORGS: OrgConfig[] = [
 		nftImage: "/nft/muni.webp",
 		membershipDisplayTokenId: 1,
 		addresses: {
-			governance: (import.meta.env.VITE_ORG_1_GOVERNANCE as `0x${string}`) || "0x0000000000000000000000000000000000000000"
+			governance: (import.meta.env.VITE_ORG_1_GOVERNANCE as `0x${string}`) || "0x3fE8874Da46F056e4f5C04dba5A1ad5C3588E675"
 		}
 	},
 	{
@@ -31,7 +31,7 @@ const DEFAULT_ORGS: OrgConfig[] = [
 		nftImage: "/nft/club.webp",
 		membershipDisplayTokenId: 1,
 		addresses: {
-			governance: (import.meta.env.VITE_ORG_2_GOVERNANCE as `0x${string}`) || "0x0000000000000000000000000000000000000000"
+			governance: (import.meta.env.VITE_ORG_2_GOVERNANCE as `0x${string}`) || "0x8E5E90c1fEBCC5db754604a9D951A515c4987141"
 		}
 	},
 	{
@@ -41,7 +41,7 @@ const DEFAULT_ORGS: OrgConfig[] = [
 		nftImage: "/nft/football_club.webp",
 		membershipDisplayTokenId: 1,
 		addresses: {
-			governance: (import.meta.env.VITE_ORG_3_GOVERNANCE as `0x${string}`) || "0x0000000000000000000000000000000000000000"
+			governance: (import.meta.env.VITE_ORG_3_GOVERNANCE as `0x${string}`) || "0xbad4C9b442E550dF9D119fB6166CF0Ecb472f624"
 		}
 	}
 ];
